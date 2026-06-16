@@ -698,7 +698,9 @@ function renderGate(){
       $("gerr").textContent="";var btn=f.querySelector('button[type=submit]');btn.disabled=true;btn.textContent="Anmelden …";
       authLogin(email,pass).then(function(){startApp();}).catch(function(err){
         btn.disabled=false;btn.textContent="Anmelden";
-        $("gerr").textContent=(err&&err.status===400)?"E-Mail oder Passwort falsch.":(navigator.onLine?"Anmeldung fehlgeschlagen.":"Keine Internetverbindung.");
+        var base=(err&&err.status===400)?"E-Mail oder Passwort falsch.":(navigator.onLine?"Anmeldung fehlgeschlagen.":"Keine Internetverbindung.");
+        var info=err&&(err.msg||err.message);var st=err&&err.status;
+        $("gerr").textContent=base+((info||st)?" ["+(info||"")+(st?(info?", ":"")+st:"")+"]":"");
       });
     });
     $("connReset").onclick=function(){if(confirm("Cloud-Verbindung auf diesem Gerät trennen?")){authForceLogout();SB={url:"",key:""};lsSet(LS_SB,SB);renderGate();}};
