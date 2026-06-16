@@ -105,6 +105,23 @@ header.top{position:sticky;top:0;z-index:30;background:linear-gradient(135deg,va
 .field{width:100%;border:1px solid var(--line);border-radius:10px;padding:11px 12px;font-size:16px;background:#fff;outline:none}
 .field:focus{border-color:var(--red)}
 textarea.field{min-height:120px;resize:vertical;line-height:1.5}
+.fg2{display:flex;gap:10px}
+.fg2 .fg{flex:1}
+.mtable{border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-top:4px}
+.mrow{display:flex;justify-content:space-between;gap:12px;padding:9px 12px;border-bottom:1px solid var(--line);background:#fff}
+.mrow:last-child{border-bottom:0}
+.mrow .mk{color:var(--muted);font-size:13px;font-weight:600}
+.mrow .mv{font-weight:700;text-align:right;word-break:break-word}
+.kvrow{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.kvrow .field{flex:1;font-size:15px}
+.reprow{position:relative;border:1px solid var(--line);border-radius:10px;padding:10px;padding-right:30px;margin-bottom:10px;background:#fafbfc}
+.reprow .rdat{margin-bottom:8px}
+.reprow .rtxt{min-height:64px}
+.xrm{cursor:pointer;color:#c00000;font-size:22px;line-height:1;flex:0 0 auto;width:24px;text-align:center}
+.reprow .xrm{position:absolute;top:8px;right:6px}
+.reprow-d{border-left:3px solid #16a34a;padding:4px 0 4px 12px;margin:10px 0}
+.reprow-d .repd{font-size:12px;font-weight:700;color:var(--muted)}
+.reprow-d .rept{margin-top:2px}
 .typegrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .typepick{border:1px solid var(--line);border-radius:10px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;
   display:flex;align-items:center;gap:9px;background:#fff;color:var(--ink)}
@@ -244,7 +261,8 @@ var TYPES=[
   {id:"stoerung",label:"Störungssuche",col:"#2563eb",icon:'<path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/>'},
   {id:"anleitung",label:"Anleitungen",col:"#c00000",icon:'<path d="M9 11l3 3 8-8"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>'},
   {id:"doku",label:"Maschinen-Doku",col:"#7c3aed",icon:'<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>'},
-  {id:"faq",label:"FAQ & Tipps",col:"#0891b2",icon:'<circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><path d="M12 17h.01"/>'}
+  {id:"faq",label:"FAQ & Tipps",col:"#0891b2",icon:'<circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><path d="M12 17h.01"/>'},
+  {id:"maschine",label:"Maschinen",col:"#16a34a",icon:'<path d="M1 3h15v13H1z"/><path d="M16 8h4l3 3v5h-7z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>'}
 ];
 function typeOf(id){for(var i=0;i<TYPES.length;i++)if(TYPES[i].id===id)return TYPES[i];return TYPES[0];}
 
@@ -431,11 +449,17 @@ function renderTabs(){
 function matches(a,q){
   if(!q)return true;
   var terms=q.toLowerCase().split(/\s+/).filter(Boolean);
-  var hay=[a.title,a.body,a.sym,a.urs,a.los,(a.tags||[]).join(" "),a.cat,typeOf(a.type).label].join(" ").toLowerCase();
+  var mhay=(a.type==="maschine")?[a.modell,a.fahrgestellnr,a.baujahr,a.kunde,a.ausstattung,
+      (a.komponenten||[]).map(function(k){return (k.bez||"")+" "+(k.sn||"");}).join(" "),
+      (a.reparaturen||[]).map(function(r){return r.text||"";}).join(" ")].join(" "):"";
+  var hay=[a.title,a.body,a.sym,a.urs,a.los,(a.tags||[]).join(" "),a.cat,mhay,typeOf(a.type).label].join(" ").toLowerCase();
   return terms.every(function(t){return hay.indexOf(t)>=0;});
 }
 function snippet(a){
   if(a.type==="stoerung")return plain((a.sym?"Symptom: "+a.sym+". ":"")+(a.los?"Lösung: "+a.los:a.urs||""));
+  if(a.type==="maschine"){var p=[];if(a.modell)p.push("Modell: "+a.modell);if(a.fahrgestellnr)p.push("FIN: "+a.fahrgestellnr);
+    if(a.kunde)p.push(a.kunde);if((a.komponenten||[]).length)p.push((a.komponenten.length)+" Komponenten");
+    if((a.reparaturen||[]).length)p.push((a.reparaturen.length)+" Reparaturen");return plain(p.join(" · "));}
   return plain(a.body||a.sym||"");
 }
 function renderList(){
@@ -478,6 +502,20 @@ function openDetail(id){
     if(a.urs)body+='<div class="sec urs"><div class="lab">Mögliche Ursache</div>'+renderText(a.urs)+'</div>';
     if(a.los)body+='<div class="sec los"><div class="lab">Lösung / Vorgehen</div>'+renderText(a.los)+'</div>';
     if(a.body)body+='<div class="body" style="margin-top:12px">'+renderText(a.body)+'</div>';
+  } else if(a.type==="maschine"){
+    var sd=[];
+    if(a.modell)sd.push(["Modell",a.modell]);
+    if(a.fahrgestellnr)sd.push(["Fahrgestellnummer",a.fahrgestellnr]);
+    if(a.baujahr)sd.push(["Baujahr",a.baujahr]);
+    if(a.kunde)sd.push(["Kunde / Standort",a.kunde]);
+    if(a.tuevBis)sd.push(["TÜV gültig bis",fmtDate(a.tuevBis)]);
+    if(sd.length)body+='<div class="mtable">'+sd.map(function(r){return '<div class="mrow"><span class="mk">'+esc(r[0])+'</span><span class="mv">'+esc(r[1])+'</span></div>';}).join("")+'</div>';
+    if((a.komponenten||[]).length){body+='<div class="sec"><div class="lab">Komponenten &amp; Seriennummern</div><div class="mtable">'+
+      a.komponenten.map(function(k){return '<div class="mrow"><span class="mk">'+esc(k.bez||"")+'</span><span class="mv">'+esc(k.sn||"")+'</span></div>';}).join("")+'</div></div>';}
+    if(a.ausstattung)body+='<div class="sec"><div class="lab">Ausstattung</div>'+renderText(a.ausstattung)+'</div>';
+    if((a.reparaturen||[]).length){body+='<div class="sec"><div class="lab">Reparaturen / Wartung</div>'+
+      a.reparaturen.slice().sort(function(x,y){return (y.datum||"").localeCompare(x.datum||"");}).map(function(r){
+        return '<div class="reprow-d"><div class="repd">'+esc(r.datum?fmtDate(r.datum):"")+'</div><div class="rept">'+renderText(r.text||"")+'</div></div>';}).join("")+'</div>';}
   } else {
     body='<div class="body">'+renderText(a.body)+'</div>';
   }
@@ -508,7 +546,8 @@ function openDetail(id){
 var EDIT=null;        // aktuell bearbeiteter Artikel (Arbeitskopie)
 function openEditor(id,presetType){
   if(id&&DB.arts[id]){EDIT=JSON.parse(JSON.stringify(DB.arts[id]));}
-  else {EDIT={id:uid(),type:presetType||FILTER||"stoerung",title:"",body:"",sym:"",urs:"",los:"",cat:"",tags:[],images:[],files:[]};}
+  else {EDIT={id:uid(),type:presetType||FILTER||"stoerung",title:"",body:"",sym:"",urs:"",los:"",cat:"",tags:[],images:[],files:[],
+    modell:"",fahrgestellnr:"",baujahr:"",kunde:"",tuevBis:"",ausstattung:"",komponenten:[],reparaturen:[]};}
   drawEditor();showView("viewEdit");
 }
 function drawEditor(){
@@ -520,6 +559,18 @@ function drawEditor(){
       '<div class="fg"><label>Mögliche Ursache</label><textarea class="field" id="e_urs" placeholder="Woran liegt es?">'+esc(a.urs)+'</textarea></div>'+
       '<div class="fg"><label>Lösung / Vorgehen</label><textarea class="field" id="e_los" placeholder="Schritt 1 …&#10;- Punkt&#10;- Punkt">'+esc(a.los)+'</textarea></div>'+
       '<div class="fg"><label>Zusätzliche Notizen (optional)</label><textarea class="field" id="e_body" placeholder="">'+esc(a.body)+'</textarea></div>';
+  } else if(a.type==="maschine"){
+    var komp=(a.komponenten||[]).map(function(k,idx){return '<div class="kvrow"><input class="field kbez" value="'+esc(k.bez||"")+'" placeholder="Bauteil (z. B. Motor links)"><input class="field ksn" value="'+esc(k.sn||"")+'" placeholder="Seriennummer"><span class="xrm" data-k="'+idx+'">×</span></div>';}).join("");
+    var reps=(a.reparaturen||[]).map(function(r,idx){return '<div class="reprow"><input type="date" class="field rdat" value="'+esc(r.datum||"")+'"><textarea class="field rtxt" placeholder="Was wurde gemacht? Teile, Kosten, Techniker …">'+esc(r.text||"")+'</textarea><span class="xrm" data-r="'+idx+'">×</span></div>';}).join("");
+    fields='<div class="fg2"><div class="fg"><label>Modell</label><input class="field" id="e_modell" placeholder="z. B. Lepton 5100" value="'+esc(a.modell)+'"></div>'+
+      '<div class="fg"><label>Baujahr</label><input class="field" id="e_baujahr" placeholder="z. B. 2021" value="'+esc(a.baujahr)+'"></div></div>'+
+      '<div class="fg"><label>Fahrgestellnummer (FIN)</label><input class="field" id="e_fahrgestellnr" placeholder="Fahrgestell-/Seriennummer der Maschine" value="'+esc(a.fahrgestellnr)+'"></div>'+
+      '<div class="fg2"><div class="fg"><label>Kunde / Standort</label><input class="field" id="e_kunde" placeholder="z. B. Mustermann GmbH, Wien" value="'+esc(a.kunde)+'"></div>'+
+      '<div class="fg"><label>TÜV gültig bis</label><input type="date" class="field" id="e_tuevBis" value="'+esc(a.tuevBis)+'"></div></div>'+
+      '<div class="fg"><label>Komponenten &amp; Seriennummern</label><div id="kompList">'+komp+'</div><button class="btn ghost" id="addKomp" type="button"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Bauteil</button></div>'+
+      '<div class="fg"><label>Ausstattung</label><textarea class="field" id="e_ausstattung" placeholder="Sonderausstattung, Optionen … &#10;„- “ für Aufzählung">'+esc(a.ausstattung)+'</textarea></div>'+
+      '<div class="fg"><label>Reparaturen / Wartung</label><div id="repList">'+reps+'</div><button class="btn ghost" id="addRep" type="button"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Eintrag</button></div>'+
+      '<div class="note" style="margin-top:2px">TÜV-Dokumente, Rechnungen und Fotos unten als <b>Bilder</b>/<b>Dateien</b> anhängen.</div>';
   } else {
     fields='<div class="fg"><label>Inhalt</label><textarea class="field" id="e_body" style="min-height:200px" placeholder="Text … &#10;&#10;**fett**, *kursiv*, „- “ für Aufzählung, „# “ für Überschrift.">'+esc(a.body)+'</textarea></div>';
   }
@@ -528,8 +579,8 @@ function drawEditor(){
   var h='<button class="btn ghost" id="cancelBtn" style="margin-bottom:12px"><svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Abbrechen</button>'+
     '<div class="detail">'+
     '<div class="fg"><label>Art</label><div class="typegrid" id="typeGrid">'+typeGrid+'</div></div>'+
-    '<div class="fg"><label>Titel</label><input class="field" id="e_title" placeholder="Kurzer, suchbarer Titel" value="'+esc(a.title)+'"></div>'+
-    '<div class="fg"><label>Kategorie / Baugruppe (optional)</label><input class="field" id="e_cat" placeholder="z. B. Sieb, Hydraulik, Förderband" value="'+esc(a.cat)+'"></div>'+
+    '<div class="fg"><label>'+(a.type==="maschine"?"Maschine / Bezeichnung":"Titel")+'</label><input class="field" id="e_title" placeholder="'+(a.type==="maschine"?"z. B. Lepton 5100 – Demo 1":"Kurzer, suchbarer Titel")+'" value="'+esc(a.title)+'"></div>'+
+    (a.type==="maschine"?"":'<div class="fg"><label>Kategorie / Baugruppe (optional)</label><input class="field" id="e_cat" placeholder="z. B. Sieb, Hydraulik, Förderband" value="'+esc(a.cat)+'"></div>')+
     fields+
     '<div class="fg"><label>Schlagwörter (mit Komma trennen)</label><input class="field" id="e_tags" placeholder="z. B. fehlercode E12, lager, schmierung" value="'+esc((a.tags||[]).join(", "))+'"></div>'+
     '<div class="fg"><label>Bilder</label><button class="btn ghost" id="addImg"><svg viewBox="0 0 24 24"><path d="M21 15l-5-5L5 21"/><path d="M3 5h18v14H3z"/><circle cx="8.5" cy="9.5" r="1.5"/></svg>Bild hinzufügen</button><div class="thumbs" id="thumbs">'+thumbs+'</div></div>'+
@@ -547,6 +598,12 @@ function drawEditor(){
   $("addFile").onclick=function(){$("fileIn").click();};
   var fxs=$("filelist").querySelectorAll(".x");
   for(var k=0;k<fxs.length;k++)fxs[k].onclick=function(){var idx=+this.getAttribute("data-fi");collectEditor();(EDIT.files=EDIT.files||[]).splice(idx,1);drawEditor();};
+  if($("addKomp"))$("addKomp").onclick=function(){collectEditor();(EDIT.komponenten=EDIT.komponenten||[]).push({bez:"",sn:""});drawEditor();};
+  if($("addRep"))$("addRep").onclick=function(){collectEditor();(EDIT.reparaturen=EDIT.reparaturen||[]).push({datum:new Date().toISOString().slice(0,10),text:""});drawEditor();};
+  var krm=$("viewEdit").querySelectorAll("#kompList .xrm");
+  for(var m=0;m<krm.length;m++)krm[m].onclick=function(){var idx=+this.getAttribute("data-k");collectEditor();EDIT.komponenten.splice(idx,1);drawEditor();};
+  var rrm=$("viewEdit").querySelectorAll("#repList .xrm");
+  for(var n=0;n<rrm.length;n++)rrm[n].onclick=function(){var idx=+this.getAttribute("data-r");collectEditor();EDIT.reparaturen.splice(idx,1);drawEditor();};
   $("saveBtn").onclick=function(){
     collectEditor();
     if(!EDIT.title.trim()){toast("Bitte einen Titel eingeben");return;}
@@ -563,6 +620,14 @@ function collectEditor(){
   if($("e_urs"))EDIT.urs=$("e_urs").value;
   if($("e_los"))EDIT.los=$("e_los").value;
   if($("e_body"))EDIT.body=$("e_body").value;
+  if($("e_modell"))EDIT.modell=$("e_modell").value;
+  if($("e_baujahr"))EDIT.baujahr=$("e_baujahr").value;
+  if($("e_fahrgestellnr"))EDIT.fahrgestellnr=$("e_fahrgestellnr").value;
+  if($("e_kunde"))EDIT.kunde=$("e_kunde").value;
+  if($("e_tuevBis"))EDIT.tuevBis=$("e_tuevBis").value;
+  if($("e_ausstattung"))EDIT.ausstattung=$("e_ausstattung").value;
+  if($("kompList")){var kr=$("kompList").querySelectorAll(".kvrow");EDIT.komponenten=[];for(var i=0;i<kr.length;i++){var b=kr[i].querySelector(".kbez").value,s=kr[i].querySelector(".ksn").value;if((b&&b.trim())||(s&&s.trim()))EDIT.komponenten.push({bez:b,sn:s});}}
+  if($("repList")){var rr=$("repList").querySelectorAll(".reprow");EDIT.reparaturen=[];for(var j=0;j<rr.length;j++){var d=rr[j].querySelector(".rdat").value,t=rr[j].querySelector(".rtxt").value;if((d&&d.trim())||(t&&t.trim()))EDIT.reparaturen.push({datum:d,text:t});}}
 }
 
 /* ---- Bilder hinzufuegen ---- */
@@ -635,7 +700,7 @@ function openSettings(){
     '</details>'):'')+
     '<hr class="s">'+
     '<button class="btn danger block" id="logoutBtn">Abmelden</button>'+
-    '<div style="text-align:center;color:#aab;font-size:11px;margin-top:14px">Alzipedia '+"v7"+(isAdmin()?" · Admin":"")+'</div>'+
+    '<div style="text-align:center;color:#aab;font-size:11px;margin-top:14px">Alzipedia '+"v8"+(isAdmin()?" · Admin":"")+'</div>'+
     '</div>';
   $("viewSet").innerHTML=h;showView("viewSet");setConn(sbReady()?(navigator.onLine?"ok":"off"):"");
   $("setBack").onclick=function(){showView("viewList");};
