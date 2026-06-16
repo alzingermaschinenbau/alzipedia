@@ -312,9 +312,11 @@ function authStore(j){
 }
 function authForceLogout(){AUTH=null;CUR=null;try{localStorage.removeItem(LS_AUTH);}catch(e){}}
 function authLogin(email,password){
-  return fetch(authBase()+"/token?grant_type=password",{method:"POST",headers:authKeyHeaders(),body:JSON.stringify({email:email,password:password})})
-    .then(function(r){return r.json().catch(function(){return{};}).then(function(j){return {ok:r.ok,status:r.status,j:j};});})
-    .then(function(res){if(!res.ok)throw {status:res.status,msg:(res.j&&(res.j.error_description||res.j.msg||res.j.error))||"Anmeldung fehlgeschlagen"};authStore(res.j);return AUTH;});
+  var url=authBase()+"/token?grant_type=password";
+  return fetch(url,{method:"POST",headers:authKeyHeaders(),body:JSON.stringify({email:email,password:password})})
+    .then(function(r){return r.json().catch(function(){return{};}).then(function(j){return {ok:r.ok,status:r.status,j:j};});},
+          function(netErr){throw {status:0,msg:(netErr&&netErr.message)||"Netzwerkfehler",url:url};})
+    .then(function(res){if(!res.ok)throw {status:res.status,msg:(res.j&&(res.j.error_description||res.j.msg||res.j.error))||"Anmeldung fehlgeschlagen",url:url};authStore(res.j);return AUTH;});
 }
 function authRefresh(){
   if(!(AUTH&&AUTH.refresh_token))return Promise.reject(new Error("no refresh token"));
@@ -687,6 +689,7 @@ function renderGate(){
       '<input class="field" id="gu" type="email" placeholder="E-Mail" autocomplete="username" autocapitalize="off" autocorrect="off">'+
       '<input class="field" id="gp" type="password" placeholder="Passwort" autocomplete="current-password">'+
       '<div class="gateerr" id="gerr"></div>'+
+      '<div id="gdbg" style="font-size:11px;color:var(--muted);word-break:break-all;margin:-4px 0 8px"></div>'+
       '<button class="btn primary block" type="submit">Anmelden</button>'+
       '<button type="button" class="btn ghost block" id="connReset" style="margin-top:8px">Anderes Projekt verbinden</button>'+
       '</form>';
@@ -701,6 +704,7 @@ function renderGate(){
         var base=(err&&err.status===400)?"E-Mail oder Passwort falsch.":(navigator.onLine?"Anmeldung fehlgeschlagen.":"Keine Internetverbindung.");
         var info=err&&(err.msg||err.message);var st=err&&err.status;
         $("gerr").textContent=base+((info||st)?" ["+(info||"")+(st?(info?", ":"")+st:"")+"]":"");
+        if(err&&err.url){var dbg=$("gdbg");if(dbg)dbg.textContent="Aufgerufen: "+err.url;}
       });
     });
     $("connReset").onclick=function(){if(confirm("Cloud-Verbindung auf diesem Gerät trennen?")){authForceLogout();SB={url:"",key:""};lsSet(LS_SB,SB);renderGate();}};
