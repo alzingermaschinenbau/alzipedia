@@ -168,6 +168,9 @@ textarea.field{min-height:120px;resize:vertical;line-height:1.5}
 .subchip{flex:0 0 auto;border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 13px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap}
 .subchip.active{background:#ea580c;border-color:#ea580c;color:#fff}
 .subchip .sc{opacity:.7;font-size:11px}
+.langrow{display:flex;gap:8px;flex-wrap:wrap}
+.langbtn{border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 14px;font-size:14px;font-weight:700;color:var(--ink);cursor:pointer}
+.langbtn.active{background:var(--red);border-color:var(--red);color:#fff}
 .typegrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .typepick{border:1px solid var(--line);border-radius:10px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;
   display:flex;align-items:center;gap:9px;background:#fff;color:var(--ink)}
@@ -254,7 +257,7 @@ hr.s{border:0;border-top:1px solid var(--line);margin:16px 0}
         <button class="icobtn" id="setBtn" title="Einstellungen"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.6-2-3.4-2.4 1a7 7 0 0 0-1.7-1L16.5 3h-4l-.3 2.5a7 7 0 0 0-1.7 1l-2.4-1-2 3.4 2 1.6a7 7 0 0 0 0 2l-2 1.6 2 3.4 2.4-1a7 7 0 0 0 1.7 1l.3 2.5h4l.3-2.5a7 7 0 0 0 1.7-1l2.4 1 2-3.4-2-1.6a7 7 0 0 0 .1-1z"/></svg></button>
       </div>
       <div class="tdiv"></div>
-      <div class="tsub"><svg viewBox="0 0 24 24"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>Alzipedia · Service-Wissen</div>
+      <div class="tsub" id="tsub"><svg viewBox="0 0 24 24"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>Alzipedia · Service-Wissen</div>
     </div>
   </header>
 
@@ -280,7 +283,7 @@ hr.s{border:0;border-top:1px solid var(--line);margin:16px 0}
     <div id="viewSet" class="hidden"></div>
   </div>
 
-  <button class="fab" id="fab"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Neu</button>
+  <button class="fab" id="fab"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span id="fabT">Neu</span></button>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -303,6 +306,25 @@ function nowISO(){return new Date().toISOString();}
 function uid(){return "a"+Date.now().toString(36)+Math.random().toString(36).slice(2,8);}
 var CUR=null;
 var AUTH=lsGet(LS_AUTH,null);
+
+/* ===================== Sprachen / i18n ===================== */
+var LS_LANG="alzipedia_lang";
+var LANGS=[{id:"de",label:"Deutsch"},{id:"en",label:"English"},{id:"pl",label:"Polski"},{id:"fr",label:"Français"}];
+var I18N={
+ de:{app_sub:"Alzipedia · Service-Wissen",search_ph:"Suchen … (Symptom, Fehlercode, Stichwort)",all:"Alle",greet:"Servus, {n}!",cockpit_sub:"Dein Service-Wissen für die Lepton 5100",due:"⏰ Fällige Termine",overdue:"überfällig seit {d} T",due_today:"heute fällig",due_in:"in {d} T",new:"Neu",back:"Zurück",edit:"Bearbeiten",del:"Löschen",save:"Speichern",cancel:"Abbrechen",pdf:"PDF",settings:"Einstellungen",logged_as:"Angemeldet als",sync_now:"Jetzt sync",logout:"Abmelden",conn_ok:"Cloud verbunden",conn_off:"Offline – lokal gespeichert",conn_no:"Nicht verbunden",login_email:"E-Mail",login_pw:"Passwort",login_btn:"Anmelden",empty_none:"Noch keine Einträge. Tippe auf „Neu“, um den ersten Eintrag anzulegen.",empty_hits:"Keine Treffer.",saved:"Gespeichert",saved_local:"Lokal gespeichert",deleted:"Gelöscht",need_title:"Bitte einen Titel eingeben",confirm_del:"Diesen Eintrag wirklich löschen?",lang_label:"Sprache",t_stoerung:"Störungssuche",t_anleitung:"Anleitungen",t_doku:"Maschinen-Doku",t_faq:"FAQ & Tipps",t_maschine:"Maschinen",t_handbuch:"Handbücher"},
+ en:{app_sub:"Alzipedia · Service Knowledge",search_ph:"Search … (symptom, error code, keyword)",all:"All",greet:"Hello, {n}!",cockpit_sub:"Your service knowledge for the Lepton 5100",due:"⏰ Due dates",overdue:"overdue by {d} d",due_today:"due today",due_in:"in {d} d",new:"New",back:"Back",edit:"Edit",del:"Delete",save:"Save",cancel:"Cancel",pdf:"PDF",settings:"Settings",logged_as:"Logged in as",sync_now:"Sync now",logout:"Log out",conn_ok:"Cloud connected",conn_off:"Offline – saved locally",conn_no:"Not connected",login_email:"Email",login_pw:"Password",login_btn:"Sign in",empty_none:"No entries yet. Tap “New” to create the first one.",empty_hits:"No results.",saved:"Saved",saved_local:"Saved locally",deleted:"Deleted",need_title:"Please enter a title",confirm_del:"Really delete this entry?",lang_label:"Language",t_stoerung:"Troubleshooting",t_anleitung:"Instructions",t_doku:"Machine docs",t_faq:"FAQ & Tips",t_maschine:"Machines",t_handbuch:"Manuals"},
+ pl:{app_sub:"Alzipedia · Wiedza serwisowa",search_ph:"Szukaj … (objaw, kod błędu, słowo)",all:"Wszystkie",greet:"Cześć, {n}!",cockpit_sub:"Twoja wiedza serwisowa o Lepton 5100",due:"⏰ Terminy",overdue:"zaległe od {d} dni",due_today:"termin dziś",due_in:"za {d} dni",new:"Nowy",back:"Wstecz",edit:"Edytuj",del:"Usuń",save:"Zapisz",cancel:"Anuluj",pdf:"PDF",settings:"Ustawienia",logged_as:"Zalogowano jako",sync_now:"Synchronizuj",logout:"Wyloguj",conn_ok:"Chmura połączona",conn_off:"Offline – zapis lokalny",conn_no:"Brak połączenia",login_email:"E-mail",login_pw:"Hasło",login_btn:"Zaloguj",empty_none:"Brak wpisów. Dotknij „Nowy”, aby dodać pierwszy.",empty_hits:"Brak wyników.",saved:"Zapisano",saved_local:"Zapisano lokalnie",deleted:"Usunięto",need_title:"Podaj tytuł",confirm_del:"Na pewno usunąć ten wpis?",lang_label:"Język",t_stoerung:"Wyszukiwanie usterek",t_anleitung:"Instrukcje",t_doku:"Dokumentacja maszyn",t_faq:"FAQ i wskazówki",t_maschine:"Maszyny",t_handbuch:"Podręczniki"},
+ fr:{app_sub:"Alzipedia · Savoir SAV",search_ph:"Rechercher … (symptôme, code, mot-clé)",all:"Tous",greet:"Bonjour, {n} !",cockpit_sub:"Votre savoir SAV pour la Lepton 5100",due:"⏰ Échéances",overdue:"en retard de {d} j",due_today:"échéance aujourd'hui",due_in:"dans {d} j",new:"Nouveau",back:"Retour",edit:"Modifier",del:"Supprimer",save:"Enregistrer",cancel:"Annuler",pdf:"PDF",settings:"Paramètres",logged_as:"Connecté en tant que",sync_now:"Synchroniser",logout:"Déconnexion",conn_ok:"Cloud connecté",conn_off:"Hors ligne – local",conn_no:"Non connecté",login_email:"E-mail",login_pw:"Mot de passe",login_btn:"Se connecter",empty_none:"Aucune entrée. Touchez « Nouveau » pour créer la première.",empty_hits:"Aucun résultat.",saved:"Enregistré",saved_local:"Enregistré localement",deleted:"Supprimé",need_title:"Veuillez saisir un titre",confirm_del:"Vraiment supprimer cette entrée ?",lang_label:"Langue",t_stoerung:"Dépannage",t_anleitung:"Guides",t_doku:"Doc machine",t_faq:"FAQ & astuces",t_maschine:"Machines",t_handbuch:"Manuels"}
+};
+var LANG=lsGet(LS_LANG,"de");if(!I18N[LANG])LANG="de";
+function t(k,vars){var s=(I18N[LANG]&&I18N[LANG][k])||I18N.de[k]||k;if(vars)for(var v in vars)s=s.replace("{"+v+"}",vars[v]);return s;}
+function typeLabel(tp){var k="t_"+(tp&&tp.id?tp.id:tp);return (I18N[LANG]&&I18N[LANG][k])||(tp&&tp.label)||k;}
+function applyI18n(){
+  if($("tsub"))$("tsub").innerHTML='<svg viewBox="0 0 24 24"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>'+esc(t("app_sub"));
+  if($("q"))$("q").placeholder=t("search_ph");
+  if($("fabT"))$("fabT").textContent=t("new");
+}
+function setLang(l){if(!I18N[l])return;LANG=l;lsSet(LS_LANG,l);applyI18n();renderTabs();renderList();if(!$("viewSet").classList.contains("hidden"))openSettings();}
 
 /* ---- Inhaltstypen ---- */
 var TYPES=[
@@ -420,7 +442,7 @@ function artsArr(){var a=[];for(var id in DB.arts){var x=DB.arts[id];if(x&&!x.de
 
 function setConn(state){ // "ok" | "off" | ""
   var els=document.querySelectorAll(".conn");for(var i=0;i<els.length;i++){els[i].className="conn"+(state?" "+state:"");
-    var t=els[i].querySelector(".t");if(t)t.textContent=state==="ok"?"Cloud verbunden":(state==="off"?"Offline – lokal gespeichert":"Nicht verbunden");}
+    var el2=els[i].querySelector(".t");if(el2)el2.textContent=state==="ok"?t("conn_ok"):(state==="off"?t("conn_off"):t("conn_no"));}
 }
 
 function flushQueue(){
@@ -489,7 +511,7 @@ function renderSub(){
   var s=$("sub");if(!s)return;
   if(FILTER!=="handbuch"){s.innerHTML="";return;}
   var used={};artsArr().forEach(function(a){if(a.type==="handbuch"&&a.dokart)used[a.dokart]=(used[a.dokart]||0)+1;});
-  var h='<div class="subchip'+(DOKFILTER===""?" active":"")+'" data-d="">Alle</div>';
+  var h='<div class="subchip'+(DOKFILTER===""?" active":"")+'" data-d="">'+esc(t("all"))+'</div>';
   DOKARTEN.forEach(function(d){if(!used[d])return;h+='<div class="subchip'+(DOKFILTER===d?" active":"")+'" data-d="'+esc(d)+'">'+esc(d)+' <span class="sc">'+used[d]+'</span></div>';});
   s.innerHTML='<div class="subbar">'+h+'</div>';
   var cs=s.querySelectorAll(".subchip");
@@ -514,19 +536,19 @@ function renderHome(){
   var hm=$("home");if(!hm)return;
   var name=capit(((CUR&&CUR.n)||"").split(/\s+/)[0]||"");
   var all=artsArr();var counts={};all.forEach(function(a){counts[a.type]=(counts[a.type]||0)+1;});
-  var cards=TYPES.map(function(t){
-    return '<div class="stat'+(FILTER===t.id?" active":"")+'" data-t="'+t.id+'" style="background:'+t.col+'14;color:'+t.col+'">'+
-      '<div class="num">'+(counts[t.id]||0)+'</div><div class="lab">'+esc(t.label)+'</div></div>';
+  var cards=TYPES.map(function(tp){
+    return '<div class="stat'+(FILTER===tp.id?" active":"")+'" data-t="'+tp.id+'" style="background:'+tp.col+'14;color:'+tp.col+'">'+
+      '<div class="num">'+(counts[tp.id]||0)+'</div><div class="lab">'+esc(typeLabel(tp))+'</div></div>';
   }).join("");
   var rem=reminders(),remHtml="";
   if(rem.length){
-    remHtml='<div class="reminders"><div class="rmh">⏰ Fällige Termine</div>'+rem.slice(0,8).map(function(r){
+    remHtml='<div class="reminders"><div class="rmh">'+esc(t("due"))+'</div>'+rem.slice(0,8).map(function(r){
       var cls=r.days<0?"over":(r.days<=7?"soon":"");
-      var txt=r.days<0?("überfällig seit "+(-r.days)+" T"):(r.days===0?"heute fällig":("in "+r.days+" T"));
-      return '<div class="rmrow '+cls+'" data-id="'+esc(r.id)+'"><span class="rmw">'+esc(r.was)+' · '+esc(r.title||"")+'</span><span class="rmd">'+esc(fmtDate(r.datum))+' · '+txt+'</span></div>';
+      var txt=r.days<0?t("overdue",{d:-r.days}):(r.days===0?t("due_today"):t("due_in",{d:r.days}));
+      return '<div class="rmrow '+cls+'" data-id="'+esc(r.id)+'"><span class="rmw">'+esc(r.was)+' · '+esc(r.title||"")+'</span><span class="rmd">'+esc(fmtDate(r.datum))+' · '+esc(txt)+'</span></div>';
     }).join("")+'</div>';
   }
-  hm.innerHTML='<div class="greet"><h2>Servus, '+esc(name||"")+'!</h2><p>Dein Service-Wissen für die Lepton 5100</p></div>'+
+  hm.innerHTML='<div class="greet"><h2>'+esc(t("greet",{n:name||""}))+'</h2><p>'+esc(t("cockpit_sub"))+'</p></div>'+
     remHtml+'<div class="stats">'+cards+'</div>';
   var st=hm.querySelectorAll(".stat");
   for(var i=0;i<st.length;i++)st[i].onclick=function(){var t=this.getAttribute("data-t");FILTER=(FILTER===t?"":t);DOKFILTER="";renderTabs();renderList();try{window.scrollTo(0,0);}catch(e){}};
@@ -536,9 +558,9 @@ function renderHome(){
 function renderTabs(){
   var all=artsArr();
   var counts={};all.forEach(function(a){counts[a.type]=(counts[a.type]||0)+1;});
-  var h='<div class="tab'+(FILTER===""?" active":"")+'" data-t=""><span>Alle</span><span class="cnt">'+all.length+'</span></div>';
-  TYPES.forEach(function(t){
-    h+='<div class="tab'+(FILTER===t.id?" active":"")+'" data-t="'+t.id+'"><span class="dot" style="background:'+t.col+'"></span><span>'+esc(t.label)+'</span><span class="cnt">'+(counts[t.id]||0)+'</span></div>';
+  var h='<div class="tab'+(FILTER===""?" active":"")+'" data-t=""><span>'+esc(t("all"))+'</span><span class="cnt">'+all.length+'</span></div>';
+  TYPES.forEach(function(tp){
+    h+='<div class="tab'+(FILTER===tp.id?" active":"")+'" data-t="'+tp.id+'"><span class="dot" style="background:'+tp.col+'"></span><span>'+esc(typeLabel(tp))+'</span><span class="cnt">'+(counts[tp.id]||0)+'</span></div>';
   });
   $("tabs").innerHTML=h;
   var tabs=$("tabs").querySelectorAll(".tab");
@@ -568,14 +590,14 @@ function renderList(){
   arr.sort(function(a,b){return (b.updated||"").localeCompare(a.updated||"");});
   if(!arr.length){
     $("list").innerHTML='<div class="empty"><svg viewBox="0 0 24 24"><path d="M21 21l-4.3-4.3"/><circle cx="11" cy="11" r="8"/></svg>'+
-      '<div>'+(artsArr().length?"Keine Treffer.":"Noch keine Einträge. Tippe auf „Neu“, um den ersten Artikel anzulegen.")+'</div></div>';
+      '<div>'+esc(artsArr().length?t("empty_hits"):t("empty_none"))+'</div></div>';
     return;
   }
   var h="";
   arr.forEach(function(a){
-    var t=typeOf(a.type);
+    var tp=typeOf(a.type);
     h+='<div class="card" data-id="'+esc(a.id)+'">'+
-       '<span class="badge" style="background:'+t.col+'"><span class="dot" style="width:7px;height:7px;border-radius:50%;background:#fff"></span>'+esc(t.label)+'</span>'+
+       '<span class="badge" style="background:'+tp.col+'"><span class="dot" style="width:7px;height:7px;border-radius:50%;background:#fff"></span>'+esc(typeLabel(tp))+'</span>'+
        '<h3>'+esc(a.title||"(ohne Titel)")+'</h3>'+
        '<div class="snip">'+esc(snippet(a))+'</div>'+
        ((a.tags&&a.tags.length)?'<div class="taglist">'+a.tags.slice(0,5).map(function(x){return '<span class="tag">'+esc(x)+'</span>';}).join("")+'</div>':"")+
@@ -596,7 +618,7 @@ function showView(name){
   window.scrollTo(0,0);
 }
 function openDetail(id){
-  var a=DB.arts[id];if(!a)return;var t=typeOf(a.type);
+  var a=DB.arts[id];if(!a)return;var tp=typeOf(a.type);
   var body="";
   if(a.type==="stoerung"){
     if(a.sym)body+='<div class="sec sym"><div class="lab">Symptom</div>'+renderText(a.sym)+'</div>';
@@ -637,25 +659,25 @@ function openDetail(id){
   }
   var imgs=(a.images||[]).map(function(u){return '<img src="'+esc(u)+'" data-u="'+esc(u)+'" alt="">';}).join("");
   var docs=(a.files||[]).map(function(f){return '<a class="docrow" href="'+esc(f.url)+'" target="_blank" rel="noopener"><span class="docic"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></span><span class="docnm">'+esc(f.name||"Datei")+'</span><span class="docsz">'+fmtSize(f.size)+'</span></a>';}).join("");
-  var h='<button class="btn ghost" id="backBtn" style="margin-bottom:12px"><svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Zurück</button>'+
+  var h='<button class="btn ghost" id="backBtn" style="margin-bottom:12px"><svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>'+esc(t("back"))+'</button>'+
     '<div class="detail">'+
-    '<span class="badge" style="background:'+t.col+'">'+esc(t.label)+'</span>'+
+    '<span class="badge" style="background:'+tp.col+'">'+esc(typeLabel(tp))+'</span>'+
     '<h2>'+esc(a.title||"(ohne Titel)")+'</h2>'+
-    '<div class="meta">'+(a.cat?esc(a.cat)+" · ":"")+'zuletzt geändert '+fmtDate(a.updated)+(a.author?" · "+esc(a.author):"")+'</div>'+
+    '<div class="meta">'+(a.cat?esc(a.cat)+" · ":"")+fmtDate(a.updated)+(a.author?" · "+esc(a.author):"")+'</div>'+
     body+
     (imgs?'<div class="shots">'+imgs+'</div>':"")+
     (docs?'<div class="docs">'+docs+'</div>':"")+
     ((a.tags&&a.tags.length)?'<div class="taglist" style="margin-top:14px">'+a.tags.map(function(x){return '<span class="tag">'+esc(x)+'</span>';}).join("")+'</div>':"")+
     '<hr class="s">'+
-    '<div class="row"><button class="btn ghost" id="editBtn"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>Bearbeiten</button>'+
-    '<button class="btn ghost" id="printBtn"><svg viewBox="0 0 24 24"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>PDF</button>'+
-    '<button class="btn danger" id="delBtn"><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>Löschen</button></div>'+
+    '<div class="row"><button class="btn ghost" id="editBtn"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>'+esc(t("edit"))+'</button>'+
+    '<button class="btn ghost" id="printBtn"><svg viewBox="0 0 24 24"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>'+esc(t("pdf"))+'</button>'+
+    '<button class="btn danger" id="delBtn"><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>'+esc(t("del"))+'</button></div>'+
     '</div>';
   $("viewDetail").innerHTML=h;showView("viewDetail");
   $("backBtn").onclick=function(){showView("viewList");};
   $("editBtn").onclick=function(){openEditor(id);};
   $("printBtn").onclick=function(){window.print();};
-  $("delBtn").onclick=function(){if(confirm("Diesen Artikel wirklich löschen?")){deleteArticle(id);toast("Gelöscht");showView("viewList");renderTabs();renderList();}};
+  $("delBtn").onclick=function(){if(confirm(t("confirm_del"))){deleteArticle(id);toast(t("deleted"));showView("viewList");renderTabs();renderList();}};
   var shots=$("viewDetail").querySelectorAll(".shots img");
   for(var i=0;i<shots.length;i++)shots[i].onclick=function(){lightbox(this.getAttribute("data-u"));};
   var lns=$("viewDetail").querySelectorAll(".lnkrow");
@@ -677,7 +699,7 @@ function openEditor(id,presetType){
 }
 function drawEditor(){
   var a=EDIT;
-  var typeGrid=TYPES.map(function(t){return '<div class="typepick'+(a.type===t.id?" active":"")+'" data-t="'+t.id+'"><span class="dot" style="background:'+t.col+'"></span>'+esc(t.label)+'</div>';}).join("");
+  var typeGrid=TYPES.map(function(tp){return '<div class="typepick'+(a.type===tp.id?" active":"")+'" data-t="'+tp.id+'"><span class="dot" style="background:'+tp.col+'"></span>'+esc(typeLabel(tp))+'</div>';}).join("");
   var fields;
   if(a.type==="stoerung"){
     fields='<div class="fg"><label>Symptom / Fehlerbild</label><textarea class="field" id="e_sym" placeholder="Was passiert? Fehlercode, Geräusch, Verhalten …">'+esc(a.sym)+'</textarea></div>'+
@@ -714,7 +736,7 @@ function drawEditor(){
   }
   var thumbs=(a.images||[]).map(function(u,idx){return '<div class="thumb"><img src="'+esc(u)+'" alt=""><span class="x" data-i="'+idx+'">×</span></div>';}).join("");
   var filelist=(a.files||[]).map(function(f,idx){return '<div class="fileitem"><a class="fnm" href="'+esc(f.url)+'" target="_blank" rel="noopener">'+esc(f.name||"Datei")+'</a><span class="fsz">'+fmtSize(f.size)+'</span><span class="x" data-fi="'+idx+'">×</span></div>';}).join("");
-  var h='<button class="btn ghost" id="cancelBtn" style="margin-bottom:12px"><svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Abbrechen</button>'+
+  var h='<button class="btn ghost" id="cancelBtn" style="margin-bottom:12px"><svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>'+esc(t("cancel"))+'</button>'+
     '<div class="detail">'+
     '<div class="fg"><label>Art</label><div class="typegrid" id="typeGrid">'+typeGrid+'</div></div>'+
     '<div class="fg"><label>'+(a.type==="maschine"?"Maschine / Bezeichnung":"Titel")+'</label><input class="field" id="e_title" placeholder="'+(a.type==="maschine"?"z. B. Lepton 5100 – Demo 1":"Kurzer, suchbarer Titel")+'" value="'+esc(a.title)+'"></div>'+
@@ -724,7 +746,7 @@ function drawEditor(){
     '<div class="fg"><label>Bilder</label><button class="btn ghost" id="addImg"><svg viewBox="0 0 24 24"><path d="M21 15l-5-5L5 21"/><path d="M3 5h18v14H3z"/><circle cx="8.5" cy="9.5" r="1.5"/></svg>Bild hinzufügen</button><div class="thumbs" id="thumbs">'+thumbs+'</div></div>'+
     '<div class="fg"><label>Dateien (PDF, Word, Excel …)</label><button class="btn ghost" id="addFile"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>Datei hinzufügen</button><div class="filelist" id="filelist">'+filelist+'</div></div>'+
     '<hr class="s">'+
-    '<button class="btn primary block" id="saveBtn"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>Speichern</button>'+
+    '<button class="btn primary block" id="saveBtn"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>'+esc(t("save"))+'</button>'+
     '</div>';
   $("viewEdit").innerHTML=h;
   $("cancelBtn").onclick=function(){if(EDIT&&DB.arts[EDIT.id])openDetail(EDIT.id);else showView("viewList");};
@@ -748,8 +770,8 @@ function drawEditor(){
   for(var p=0;p<trm.length;p++)trm[p].onclick=function(){var idx=+this.getAttribute("data-tm");collectEditor();EDIT.termine.splice(idx,1);drawEditor();};
   $("saveBtn").onclick=function(){
     collectEditor();
-    if(!EDIT.title.trim()){toast("Bitte einen Titel eingeben");return;}
-    saveArticle(EDIT);toast(sbReady()?"Gespeichert":"Lokal gespeichert");
+    if(!EDIT.title.trim()){toast(t("need_title"));return;}
+    saveArticle(EDIT);toast(sbReady()?t("saved"):t("saved_local"));
     renderTabs();openDetail(EDIT.id);
   };
 }
@@ -826,11 +848,13 @@ $("fileIn").onchange=function(){
 
 /* ===================== Einstellungen ===================== */
 function openSettings(){
-  var h='<button class="btn ghost" id="setBack" style="margin-bottom:12px"><svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Zurück</button>'+
+  var langBtns=LANGS.map(function(l){return '<button class="langbtn'+(LANG===l.id?" active":"")+'" data-l="'+l.id+'">'+esc(l.label)+'</button>';}).join("");
+  var h='<button class="btn ghost" id="setBack" style="margin-bottom:12px"><svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>'+esc(t("back"))+'</button>'+
     '<div class="detail">'+
-    '<h2>Einstellungen</h2>'+
-    '<div class="setrow"><span class="l">Angemeldet als</span><b>'+esc((CUR&&CUR.n)||"")+'</b></div>'+
-    '<div class="setrow"><span class="l conn"><span class="led"></span><span class="t"></span></span><button class="btn ghost" id="syncBtn" style="padding:8px 12px;font-size:13px">Jetzt sync</button></div>'+
+    '<h2>'+esc(t("settings"))+'</h2>'+
+    '<div class="setrow"><span class="l">'+esc(t("logged_as"))+'</span><b>'+esc((CUR&&CUR.n)||"")+'</b></div>'+
+    '<div class="setrow"><span class="l conn"><span class="led"></span><span class="t"></span></span><button class="btn ghost" id="syncBtn" style="padding:8px 12px;font-size:13px">'+esc(t("sync_now"))+'</button></div>'+
+    '<div class="fg" style="margin-top:8px"><label>'+esc(t("lang_label"))+'</label><div class="langrow" id="langRow">'+langBtns+'</div></div>'+
     (isAdmin()?(
     '<h4 style="margin:18px 0 6px">Cloud (geteilte Datenbank)</h4>'+
     '<div class="note">Damit alle Techniker denselben Stand sehen, einmalig ein <b>Supabase</b>-Projekt verbinden. Ohne Verbindung läuft Alzipedia rein lokal auf diesem Gerät.</div>'+
@@ -843,12 +867,13 @@ function openSettings(){
     '<div style="font-size:13px;line-height:1.6">3. <b>Authentication → Users → Add user</b>: für jeden Techniker E-Mail + Passwort anlegen (Häkchen „Auto Confirm User").<br>4. Unter <b>Project Settings → API</b> die <b>Project URL</b> und den <b>Publishable key</b> (sb_publishable_…) kopieren und oben eintragen → <b>Verbinden</b>.</div>'+
     '</details>'):'')+
     '<hr class="s">'+
-    '<button class="btn danger block" id="logoutBtn">Abmelden</button>'+
-    '<div style="text-align:center;color:#aab;font-size:11px;margin-top:14px">Alzipedia '+"v13"+(isAdmin()?" · Admin":"")+'</div>'+
+    '<button class="btn danger block" id="logoutBtn">'+esc(t("logout"))+'</button>'+
+    '<div style="text-align:center;color:#aab;font-size:11px;margin-top:14px">Alzipedia '+"v14"+(isAdmin()?" · Admin":"")+'</div>'+
     '</div>';
   $("viewSet").innerHTML=h;showView("viewSet");setConn(sbReady()?(navigator.onLine?"ok":"off"):"");
   $("setBack").onclick=function(){showView("viewList");};
-  $("syncBtn").onclick=function(){toast("Synchronisiere …");syncPull().then(function(){renderTabs();renderList();toast("Aktualisiert");});};
+  if($("langRow")){var lb=$("langRow").querySelectorAll(".langbtn");for(var li=0;li<lb.length;li++)lb[li].onclick=function(){setLang(this.getAttribute("data-l"));};}
+  $("syncBtn").onclick=function(){toast("…");syncPull().then(function(){renderTabs();renderList();toast(t("saved"));});};
   if($("sbSave"))$("sbSave").onclick=function(){
     var u=($("sbUrl").value||"").trim();try{u=new URL(u).origin;}catch(e){u=u.replace(/\/+$/,"");}
     SB={url:u,key:($("sbKey").value||"").trim()};lsSet(LS_SB,SB);
@@ -874,7 +899,7 @@ function pendingDeepLink(){try{var m=(location.hash||"").match(/[#&]id=([^&]+)/)
 function deepLinkUrl(id){return location.origin+location.pathname+"#id="+encodeURIComponent(id);}
 function startApp(){
   $("gate").classList.add("hidden");$("app").classList.remove("hidden");
-  loadLocal();renderTabs();renderList();showView("viewList");
+  applyI18n();loadLocal();renderTabs();renderList();showView("viewList");
   var want=pendingDeepLink();
   if(want&&DB.arts[want])openDetail(want);
   syncPull().then(function(){renderTabs();renderList();if(want&&DB.arts[want])openDetail(want);});
@@ -904,11 +929,11 @@ function renderGate(){
     });
   }else{
     b.innerHTML='<form id="loginForm" autocomplete="on">'+
-      '<input class="field" id="gu" type="email" placeholder="E-Mail" autocomplete="username" autocapitalize="off" autocorrect="off">'+
-      '<input class="field" id="gp" type="password" placeholder="Passwort" autocomplete="current-password">'+
+      '<input class="field" id="gu" type="email" placeholder="'+esc(t("login_email"))+'" autocomplete="username" autocapitalize="off" autocorrect="off">'+
+      '<input class="field" id="gp" type="password" placeholder="'+esc(t("login_pw"))+'" autocomplete="current-password">'+
       '<div class="gateerr" id="gerr"></div>'+
       '<div id="gdbg" style="font-size:11px;color:var(--muted);word-break:break-all;margin:-4px 0 8px"></div>'+
-      '<button class="btn primary block" type="submit">Anmelden</button>'+
+      '<button class="btn primary block" type="submit">'+esc(t("login_btn"))+'</button>'+
       '<button type="button" class="btn ghost block" id="connReset" style="margin-top:8px">Anderes Projekt verbinden</button>'+
       '</form>';
     var f=$("loginForm");
