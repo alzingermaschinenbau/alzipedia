@@ -1,0 +1,24 @@
+{
+  "name": "Alzipedia – Service-Wissen",
+  "short_name": "Alzipedia",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#c00000",
+  "theme_color": "#c00000",
+  "description": "Service-Wissensdatenbank für die Lepton 5100 – Störungssuche, Anleitungen, Doku, FAQ.",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
