@@ -46,6 +46,17 @@ header.top{position:sticky;top:0;z-index:30;background:linear-gradient(135deg,va
 
 .wrap{max-width:880px;margin:0 auto;padding:14px;padding-bottom:90px}
 
+/* Cockpit / Startseite */
+.greet{margin:4px 2px 14px}
+.greet h2{font-size:24px;font-weight:800;letter-spacing:-.3px}
+.greet p{color:var(--muted);font-size:14px;margin-top:3px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px}
+.stat{border:1px solid var(--line);border-radius:14px;padding:13px 12px;cursor:pointer;transition:transform .05s,box-shadow .15s}
+.stat:active{transform:scale(.97)}
+.stat.active{box-shadow:0 0 0 2px currentColor inset}
+.stat .num{font-size:26px;font-weight:800;line-height:1}
+.stat .lab{font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);margin-top:6px;line-height:1.2}
+
 /* Suche + Tabs */
 .searchbar{display:flex;gap:8px;margin:4px 0 12px}
 .searchbar input{flex:1;border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:16px;background:#fff;outline:none}
@@ -216,6 +227,7 @@ hr.s{border:0;border-top:1px solid var(--line);margin:16px 0}
   <div class="wrap">
     <!-- Liste -->
     <div id="viewList">
+      <div id="home"></div>
       <div class="searchbar">
         <input id="q" placeholder="Suchen … (Symptom, Fehlercode, Stichwort)" autocomplete="off">
       </div>
@@ -436,6 +448,20 @@ function plain(s){return String(s||"").replace(/[*#>\-•]/g," ").replace(/\s+/g
 /* ===================== Liste ===================== */
 var FILTER="";   // type-id oder "" = alle
 var QTEXT="";
+function capit(s){s=String(s||"");return s.charAt(0).toUpperCase()+s.slice(1);}
+function renderHome(){
+  var hm=$("home");if(!hm)return;
+  var name=capit(((CUR&&CUR.n)||"").split(/\s+/)[0]||"");
+  var all=artsArr();var counts={};all.forEach(function(a){counts[a.type]=(counts[a.type]||0)+1;});
+  var cards=TYPES.map(function(t){
+    return '<div class="stat'+(FILTER===t.id?" active":"")+'" data-t="'+t.id+'" style="background:'+t.col+'14;color:'+t.col+'">'+
+      '<div class="num">'+(counts[t.id]||0)+'</div><div class="lab">'+esc(t.label)+'</div></div>';
+  }).join("");
+  hm.innerHTML='<div class="greet"><h2>Servus, '+esc(name||"")+'!</h2><p>Dein Service-Wissen für die Lepton 5100</p></div>'+
+    '<div class="stats">'+cards+'</div>';
+  var st=hm.querySelectorAll(".stat");
+  for(var i=0;i<st.length;i++)st[i].onclick=function(){var t=this.getAttribute("data-t");FILTER=(FILTER===t?"":t);renderTabs();renderList();try{window.scrollTo(0,0);}catch(e){}};
+}
 function renderTabs(){
   var all=artsArr();
   var counts={};all.forEach(function(a){counts[a.type]=(counts[a.type]||0)+1;});
@@ -464,6 +490,7 @@ function snippet(a){
   return plain(a.body||a.sym||"");
 }
 function renderList(){
+  renderHome();
   var arr=artsArr().filter(function(a){return (FILTER===""||a.type===FILTER)&&matches(a,QTEXT);});
   arr.sort(function(a,b){return (b.updated||"").localeCompare(a.updated||"");});
   if(!arr.length){
@@ -701,7 +728,7 @@ function openSettings(){
     '</details>'):'')+
     '<hr class="s">'+
     '<button class="btn danger block" id="logoutBtn">Abmelden</button>'+
-    '<div style="text-align:center;color:#aab;font-size:11px;margin-top:14px">Alzipedia '+"v9"+(isAdmin()?" · Admin":"")+'</div>'+
+    '<div style="text-align:center;color:#aab;font-size:11px;margin-top:14px">Alzipedia '+"v10"+(isAdmin()?" · Admin":"")+'</div>'+
     '</div>';
   $("viewSet").innerHTML=h;showView("viewSet");setConn(sbReady()?(navigator.onLine?"ok":"off"):"");
   $("setBack").onclick=function(){showView("viewList");};
