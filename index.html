@@ -149,6 +149,21 @@ textarea.field{min-height:120px;resize:vertical;line-height:1.5}
 .reprow-d{border-left:3px solid #16a34a;padding:4px 0 4px 12px;margin:10px 0}
 .reprow-d .repd{font-size:12px;font-weight:700;color:var(--muted)}
 .reprow-d .rept{margin-top:2px}
+.muted2{color:var(--muted);font-size:13px}
+.linkbox{max-height:240px;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:4px}
+.lkrow{display:flex;align-items:center;gap:9px;padding:9px 8px;border-radius:8px;cursor:pointer}
+.lkrow:hover{background:#f6f7f9}
+.lkrow input{width:18px;height:18px;flex:0 0 auto}
+.lkrow .lktt{font-size:14px;font-weight:600}
+.lkrow .dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto}
+.lnkrow{display:flex;align-items:center;gap:9px;padding:9px 0;border-top:1px solid var(--line);cursor:pointer}
+.lnkrow:first-of-type{border-top:0}
+.lnkrow .dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto}
+.lnkrow .lktt{flex:1;font-weight:600;font-size:14px}
+.lnkrow .lkty{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+.qrbox{margin-top:10px;text-align:center}
+.qrimg{width:240px;max-width:100%;height:auto;border:1px solid var(--line);border-radius:10px;padding:8px;background:#fff}
+.qrurl{font-size:11px;color:var(--muted);word-break:break-all;margin:6px 0 4px}
 .typegrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .typepick{border:1px solid var(--line);border-radius:10px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;
   display:flex;align-items:center;gap:9px;background:#fff;color:var(--ink)}
@@ -584,6 +599,13 @@ function openDetail(id){
     if((a.reparaturen||[]).length){body+='<div class="sec"><div class="lab">Reparaturen / Wartung</div>'+
       a.reparaturen.slice().sort(function(x,y){return (y.datum||"").localeCompare(x.datum||"");}).map(function(r){
         return '<div class="reprow-d"><div class="repd">'+esc(r.datum?fmtDate(r.datum):"")+'</div><div class="rept">'+renderText(r.text||"")+'</div></div>';}).join("")+'</div>';}
+    var lk=(a.links||[]).map(function(lid){return DB.arts[lid];}).filter(function(x){return x&&!x.deleted;});
+    if(lk.length){body+='<div class="sec"><div class="lab">Verknüpfte Anleitungen &amp; Doku</div>'+
+      lk.map(function(x){return '<div class="lnkrow" data-go="'+esc(x.id)+'"><span class="dot" style="background:'+typeOf(x.type).col+'"></span><span class="lktt">'+esc(x.title||"(ohne Titel)")+'</span><span class="lkty">'+esc(typeOf(x.type).label)+'</span></div>';}).join("")+'</div>';}
+    body+='<div class="sec qrsec"><div class="lab">QR-Code für diese Maschine</div>'+
+      '<div class="muted2" style="margin-bottom:8px">Aufkleben &amp; scannen öffnet direkt diesen Lebenslauf.</div>'+
+      '<button class="btn ghost" id="qrBtn"><svg viewBox="0 0 24 24"><path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3z"/><path d="M14 14h3v3h-3zM18 18h3v3h-3z"/></svg>QR-Code anzeigen</button>'+
+      '<div id="qrBox" class="qrbox hidden"></div></div>';
   } else {
     body='<div class="body">'+renderText(a.body)+'</div>';
   }
@@ -610,6 +632,13 @@ function openDetail(id){
   $("delBtn").onclick=function(){if(confirm("Diesen Artikel wirklich löschen?")){deleteArticle(id);toast("Gelöscht");showView("viewList");renderTabs();renderList();}};
   var shots=$("viewDetail").querySelectorAll(".shots img");
   for(var i=0;i<shots.length;i++)shots[i].onclick=function(){lightbox(this.getAttribute("data-u"));};
+  var lns=$("viewDetail").querySelectorAll(".lnkrow");
+  for(var j=0;j<lns.length;j++)lns[j].onclick=function(){openDetail(this.getAttribute("data-go"));};
+  if($("qrBtn"))$("qrBtn").onclick=function(){
+    var url=deepLinkUrl(id),box=$("qrBox");
+    box.innerHTML='<img class="qrimg" alt="QR" src="https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=0&data='+encodeURIComponent(url)+'"><div class="qrurl">'+esc(url)+'</div><div class="muted2">QR per Screenshot/„PDF" sichern und ausdrucken.</div>';
+    box.classList.remove("hidden");this.style.display="none";
+  };
 }
 
 /* ===================== Editor ===================== */
@@ -617,7 +646,7 @@ var EDIT=null;        // aktuell bearbeiteter Artikel (Arbeitskopie)
 function openEditor(id,presetType){
   if(id&&DB.arts[id]){EDIT=JSON.parse(JSON.stringify(DB.arts[id]));}
   else {EDIT={id:uid(),type:presetType||FILTER||"stoerung",title:"",body:"",sym:"",urs:"",los:"",cat:"",tags:[],images:[],files:[],
-    modell:"",fahrgestellnr:"",baujahr:"",kunde:"",tuevBis:"",ausstattung:"",komponenten:[],reparaturen:[],termine:[]};}
+    modell:"",fahrgestellnr:"",baujahr:"",kunde:"",tuevBis:"",ausstattung:"",komponenten:[],reparaturen:[],termine:[],links:[]};}
   drawEditor();showView("viewEdit");
 }
 function drawEditor(){
@@ -642,6 +671,11 @@ function drawEditor(){
       '<div class="fg"><label>Komponenten &amp; Seriennummern</label><div id="kompList">'+komp+'</div><button class="btn ghost" id="addKomp" type="button"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Bauteil</button></div>'+
       '<div class="fg"><label>Ausstattung</label><textarea class="field" id="e_ausstattung" placeholder="Sonderausstattung, Optionen … &#10;„- “ für Aufzählung">'+esc(a.ausstattung)+'</textarea></div>'+
       '<div class="fg"><label>Reparaturen / Wartung</label><div id="repList">'+reps+'</div><button class="btn ghost" id="addRep" type="button"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Eintrag</button></div>'+
+      '<div class="fg"><label>Verknüpfte Anleitungen &amp; Doku</label><div class="linkbox" id="linkBox">'+
+        (function(){var ls=a.links||[];var av=artsArr().filter(function(x){return x.type!=="maschine";}).sort(function(x,y){return (typeOf(x.type).label+x.title).localeCompare(typeOf(y.type).label+y.title);});
+         if(!av.length)return '<div class="muted2">Noch keine Artikel zum Verknüpfen vorhanden.</div>';
+         return av.map(function(x){var on=ls.indexOf(x.id)>=0;return '<label class="lkrow"><input type="checkbox" class="lkchk" value="'+esc(x.id)+'"'+(on?" checked":"")+'><span class="dot" style="background:'+typeOf(x.type).col+'"></span><span class="lktt">'+esc(x.title||"(ohne Titel)")+'</span></label>';}).join("");})()+
+      '</div></div>'+
       '<div class="note" style="margin-top:2px">TÜV-Dokumente, Rechnungen und Fotos unten als <b>Bilder</b>/<b>Dateien</b> anhängen.</div>';
   } else {
     fields='<div class="fg"><label>Inhalt</label><textarea class="field" id="e_body" style="min-height:200px" placeholder="Text … &#10;&#10;**fett**, *kursiv*, „- “ für Aufzählung, „# “ für Überschrift.">'+esc(a.body)+'</textarea></div>';
@@ -704,6 +738,7 @@ function collectEditor(){
   if($("kompList")){var kr=$("kompList").querySelectorAll(".kvrow");EDIT.komponenten=[];for(var i=0;i<kr.length;i++){var b=kr[i].querySelector(".kbez").value,s=kr[i].querySelector(".ksn").value;if((b&&b.trim())||(s&&s.trim()))EDIT.komponenten.push({bez:b,sn:s});}}
   if($("repList")){var rr=$("repList").querySelectorAll(".reprow");EDIT.reparaturen=[];for(var j=0;j<rr.length;j++){var d=rr[j].querySelector(".rdat").value,t=rr[j].querySelector(".rtxt").value;if((d&&d.trim())||(t&&t.trim()))EDIT.reparaturen.push({datum:d,text:t});}}
   if($("termList")){var tt=$("termList").querySelectorAll(".kvrow");EDIT.termine=[];for(var q=0;q<tt.length;q++){var tw=tt[q].querySelector(".twas").value,td=tt[q].querySelector(".tdat").value;if((tw&&tw.trim())||(td&&td.trim()))EDIT.termine.push({was:tw,datum:td});}}
+  if($("linkBox")){var lc=$("linkBox").querySelectorAll(".lkchk");EDIT.links=[];for(var r2=0;r2<lc.length;r2++){if(lc[r2].checked)EDIT.links.push(lc[r2].value);}}
 }
 
 /* ---- Bilder hinzufuegen ---- */
@@ -776,7 +811,7 @@ function openSettings(){
     '</details>'):'')+
     '<hr class="s">'+
     '<button class="btn danger block" id="logoutBtn">Abmelden</button>'+
-    '<div style="text-align:center;color:#aab;font-size:11px;margin-top:14px">Alzipedia '+"v11"+(isAdmin()?" · Admin":"")+'</div>'+
+    '<div style="text-align:center;color:#aab;font-size:11px;margin-top:14px">Alzipedia '+"v12"+(isAdmin()?" · Admin":"")+'</div>'+
     '</div>';
   $("viewSet").innerHTML=h;showView("viewSet");setConn(sbReady()?(navigator.onLine?"ok":"off"):"");
   $("setBack").onclick=function(){showView("viewList");};
@@ -802,10 +837,14 @@ function toast(msg){var t=$("toast");t.textContent=msg;t.classList.add("show");c
 /* ===================== Start / Login ===================== */
 var SETUP_SQL='create table if not exists artikel (\n  id text primary key,\n  data jsonb,\n  updated_at timestamptz default now()\n);\nalter table artikel enable row level security;\n\n-- nur eingeloggte Techniker duerfen lesen/schreiben:\ndrop policy if exists "alle" on artikel;\ncreate policy "eingeloggte" on artikel for all to authenticated\n  using (true) with check (true);\n\n-- Bilder-Speicher:\ninsert into storage.buckets (id,name,public)\n  values (\'alzipedia-bilder\',\'alzipedia-bilder\',true)\n  on conflict (id) do nothing;\ncreate policy "img lesen" on storage.objects for select\n  using (bucket_id=\'alzipedia-bilder\');\ncreate policy "img schreiben" on storage.objects for insert to authenticated\n  with check (bucket_id=\'alzipedia-bilder\');';
 
+function pendingDeepLink(){try{var m=(location.hash||"").match(/[#&]id=([^&]+)/);return m?decodeURIComponent(m[1]):"";}catch(e){return "";}}
+function deepLinkUrl(id){return location.origin+location.pathname+"#id="+encodeURIComponent(id);}
 function startApp(){
   $("gate").classList.add("hidden");$("app").classList.remove("hidden");
   loadLocal();renderTabs();renderList();showView("viewList");
-  syncPull().then(function(){renderTabs();renderList();});
+  var want=pendingDeepLink();
+  if(want&&DB.arts[want])openDetail(want);
+  syncPull().then(function(){renderTabs();renderList();if(want&&DB.arts[want])openDetail(want);});
 }
 function showGate(){$("app").classList.add("hidden");$("gate").classList.remove("hidden");renderGate();}
 
