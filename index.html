@@ -164,6 +164,10 @@ textarea.field{min-height:120px;resize:vertical;line-height:1.5}
 .qrbox{margin-top:10px;text-align:center}
 .qrimg{width:240px;max-width:100%;height:auto;border:1px solid var(--line);border-radius:10px;padding:8px;background:#fff}
 .qrurl{font-size:11px;color:var(--muted);word-break:break-all;margin:6px 0 4px}
+.subbar{display:flex;gap:8px;overflow-x:auto;margin:0 0 12px;padding-bottom:2px}
+.subchip{flex:0 0 auto;border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 13px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap}
+.subchip.active{background:#ea580c;border-color:#ea580c;color:#fff}
+.subchip .sc{opacity:.7;font-size:11px}
 .typegrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .typepick{border:1px solid var(--line);border-radius:10px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;
   display:flex;align-items:center;gap:9px;background:#fff;color:var(--ink)}
@@ -262,6 +266,7 @@ hr.s{border:0;border-top:1px solid var(--line);margin:16px 0}
         <input id="q" placeholder="Suchen … (Symptom, Fehlercode, Stichwort)" autocomplete="off">
       </div>
       <div class="tabs" id="tabs"></div>
+      <div id="sub"></div>
       <div id="list"></div>
     </div>
 
@@ -305,8 +310,10 @@ var TYPES=[
   {id:"anleitung",label:"Anleitungen",col:"#c00000",icon:'<path d="M9 11l3 3 8-8"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>'},
   {id:"doku",label:"Maschinen-Doku",col:"#7c3aed",icon:'<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>'},
   {id:"faq",label:"FAQ & Tipps",col:"#0891b2",icon:'<circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><path d="M12 17h.01"/>'},
-  {id:"maschine",label:"Maschinen",col:"#16a34a",icon:'<path d="M1 3h15v13H1z"/><path d="M16 8h4l3 3v5h-7z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>'}
+  {id:"maschine",label:"Maschinen",col:"#16a34a",icon:'<path d="M1 3h15v13H1z"/><path d="M16 8h4l3 3v5h-7z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>'},
+  {id:"handbuch",label:"Handbücher",col:"#ea580c",icon:'<path d="M12 7v14"/><path d="M3 18V5a2 2 0 0 1 2-2h5a2 2 0 0 1 2 2M21 18V5a2 2 0 0 0-2-2h-5a2 2 0 0 0-2 2"/>'}
 ];
+var DOKARTEN=["Handbuch","Schaltplan","Hydraulikplan","Datenblatt","Ersatzteilliste","Zertifikat","Sonstiges"];
 function typeOf(id){for(var i=0;i<TYPES.length;i++)if(TYPES[i].id===id)return TYPES[i];return TYPES[0];}
 
 /* ===================== Supabase ===================== */
@@ -477,6 +484,17 @@ function plain(s){return String(s||"").replace(/[*#>\-•]/g," ").replace(/\s+/g
 
 /* ===================== Liste ===================== */
 var FILTER="";   // type-id oder "" = alle
+var DOKFILTER=""; // Dokumentart-Unterfilter (nur Handbücher)
+function renderSub(){
+  var s=$("sub");if(!s)return;
+  if(FILTER!=="handbuch"){s.innerHTML="";return;}
+  var used={};artsArr().forEach(function(a){if(a.type==="handbuch"&&a.dokart)used[a.dokart]=(used[a.dokart]||0)+1;});
+  var h='<div class="subchip'+(DOKFILTER===""?" active":"")+'" data-d="">Alle</div>';
+  DOKARTEN.forEach(function(d){if(!used[d])return;h+='<div class="subchip'+(DOKFILTER===d?" active":"")+'" data-d="'+esc(d)+'">'+esc(d)+' <span class="sc">'+used[d]+'</span></div>';});
+  s.innerHTML='<div class="subbar">'+h+'</div>';
+  var cs=s.querySelectorAll(".subchip");
+  for(var i=0;i<cs.length;i++)cs[i].onclick=function(){DOKFILTER=this.getAttribute("data-d");renderSub();renderList();};
+}
 var QTEXT="";
 function capit(s){s=String(s||"");return s.charAt(0).toUpperCase()+s.slice(1);}
 function daysUntil(ds){var d=new Date(ds);if(isNaN(d))return null;d.setHours(0,0,0,0);var t=new Date();t.setHours(0,0,0,0);return Math.round((d-t)/86400000);}
@@ -511,7 +529,7 @@ function renderHome(){
   hm.innerHTML='<div class="greet"><h2>Servus, '+esc(name||"")+'!</h2><p>Dein Service-Wissen für die Lepton 5100</p></div>'+
     remHtml+'<div class="stats">'+cards+'</div>';
   var st=hm.querySelectorAll(".stat");
-  for(var i=0;i<st.length;i++)st[i].onclick=function(){var t=this.getAttribute("data-t");FILTER=(FILTER===t?"":t);renderTabs();renderList();try{window.scrollTo(0,0);}catch(e){}};
+  for(var i=0;i<st.length;i++)st[i].onclick=function(){var t=this.getAttribute("data-t");FILTER=(FILTER===t?"":t);DOKFILTER="";renderTabs();renderList();try{window.scrollTo(0,0);}catch(e){}};
   var rr=hm.querySelectorAll(".rmrow");
   for(var k=0;k<rr.length;k++)rr[k].onclick=function(){openDetail(this.getAttribute("data-id"));};
 }
@@ -524,7 +542,7 @@ function renderTabs(){
   });
   $("tabs").innerHTML=h;
   var tabs=$("tabs").querySelectorAll(".tab");
-  for(var i=0;i<tabs.length;i++)tabs[i].onclick=function(){FILTER=this.getAttribute("data-t");renderTabs();renderList();};
+  for(var i=0;i<tabs.length;i++)tabs[i].onclick=function(){FILTER=this.getAttribute("data-t");DOKFILTER="";renderTabs();renderList();};
 }
 function matches(a,q){
   if(!q)return true;
@@ -532,7 +550,7 @@ function matches(a,q){
   var mhay=(a.type==="maschine")?[a.modell,a.fahrgestellnr,a.baujahr,a.kunde,a.ausstattung,
       (a.komponenten||[]).map(function(k){return (k.bez||"")+" "+(k.sn||"");}).join(" "),
       (a.reparaturen||[]).map(function(r){return r.text||"";}).join(" ")].join(" "):"";
-  var hay=[a.title,a.body,a.sym,a.urs,a.los,(a.tags||[]).join(" "),a.cat,mhay,typeOf(a.type).label].join(" ").toLowerCase();
+  var hay=[a.title,a.body,a.sym,a.urs,a.los,(a.tags||[]).join(" "),a.cat,a.modell,a.dokart,mhay,typeOf(a.type).label].join(" ").toLowerCase();
   return terms.every(function(t){return hay.indexOf(t)>=0;});
 }
 function snippet(a){
@@ -540,11 +558,13 @@ function snippet(a){
   if(a.type==="maschine"){var p=[];if(a.modell)p.push("Modell: "+a.modell);if(a.fahrgestellnr)p.push("FIN: "+a.fahrgestellnr);
     if(a.kunde)p.push(a.kunde);if((a.komponenten||[]).length)p.push((a.komponenten.length)+" Komponenten");
     if((a.reparaturen||[]).length)p.push((a.reparaturen.length)+" Reparaturen");return plain(p.join(" · "));}
+  if(a.type==="handbuch"){var h=[];if(a.dokart)h.push(a.dokart);if(a.modell)h.push(a.modell);
+    if((a.files||[]).length)h.push((a.files.length)+" Datei(en)");if(a.body)h.push(plain(a.body));return plain(h.join(" · "));}
   return plain(a.body||a.sym||"");
 }
 function renderList(){
-  renderHome();
-  var arr=artsArr().filter(function(a){return (FILTER===""||a.type===FILTER)&&matches(a,QTEXT);});
+  renderHome();renderSub();
+  var arr=artsArr().filter(function(a){return (FILTER===""||a.type===FILTER)&&(FILTER!=="handbuch"||!DOKFILTER||a.dokart===DOKFILTER)&&matches(a,QTEXT);});
   arr.sort(function(a,b){return (b.updated||"").localeCompare(a.updated||"");});
   if(!arr.length){
     $("list").innerHTML='<div class="empty"><svg viewBox="0 0 24 24"><path d="M21 21l-4.3-4.3"/><circle cx="11" cy="11" r="8"/></svg>'+
@@ -606,6 +626,12 @@ function openDetail(id){
       '<div class="muted2" style="margin-bottom:8px">Aufkleben &amp; scannen öffnet direkt diesen Lebenslauf.</div>'+
       '<button class="btn ghost" id="qrBtn"><svg viewBox="0 0 24 24"><path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3z"/><path d="M14 14h3v3h-3zM18 18h3v3h-3z"/></svg>QR-Code anzeigen</button>'+
       '<div id="qrBox" class="qrbox hidden"></div></div>';
+  } else if(a.type==="handbuch"){
+    var dd=[];
+    if(a.modell)dd.push(["Modell",a.modell]);
+    if(a.dokart)dd.push(["Dokumentart",a.dokart]);
+    if(dd.length)body+='<div class="mtable">'+dd.map(function(r){return '<div class="mrow"><span class="mk">'+esc(r[0])+'</span><span class="mv">'+esc(r[1])+'</span></div>';}).join("")+'</div>';
+    if(a.body)body+='<div class="body" style="margin-top:12px">'+renderText(a.body)+'</div>';
   } else {
     body='<div class="body">'+renderText(a.body)+'</div>';
   }
@@ -646,7 +672,7 @@ var EDIT=null;        // aktuell bearbeiteter Artikel (Arbeitskopie)
 function openEditor(id,presetType){
   if(id&&DB.arts[id]){EDIT=JSON.parse(JSON.stringify(DB.arts[id]));}
   else {EDIT={id:uid(),type:presetType||FILTER||"stoerung",title:"",body:"",sym:"",urs:"",los:"",cat:"",tags:[],images:[],files:[],
-    modell:"",fahrgestellnr:"",baujahr:"",kunde:"",tuevBis:"",ausstattung:"",komponenten:[],reparaturen:[],termine:[],links:[]};}
+    modell:"",fahrgestellnr:"",baujahr:"",kunde:"",tuevBis:"",ausstattung:"",komponenten:[],reparaturen:[],termine:[],links:[],dokart:""};}
   drawEditor();showView("viewEdit");
 }
 function drawEditor(){
@@ -677,6 +703,12 @@ function drawEditor(){
          return av.map(function(x){var on=ls.indexOf(x.id)>=0;return '<label class="lkrow"><input type="checkbox" class="lkchk" value="'+esc(x.id)+'"'+(on?" checked":"")+'><span class="dot" style="background:'+typeOf(x.type).col+'"></span><span class="lktt">'+esc(x.title||"(ohne Titel)")+'</span></label>';}).join("");})()+
       '</div></div>'+
       '<div class="note" style="margin-top:2px">TÜV-Dokumente, Rechnungen und Fotos unten als <b>Bilder</b>/<b>Dateien</b> anhängen.</div>';
+  } else if(a.type==="handbuch"){
+    var dpick=DOKARTEN.map(function(d){return '<div class="typepick'+(a.dokart===d?" active":"")+'" data-d="'+esc(d)+'">'+esc(d)+'</div>';}).join("");
+    fields='<div class="fg"><label>Modell</label><input class="field" id="e_modell" placeholder="z. B. Lepton 5100 (für welche Maschine)" value="'+esc(a.modell)+'"></div>'+
+      '<div class="fg"><label>Dokumentart</label><div class="typegrid" id="dokGrid">'+dpick+'</div></div>'+
+      '<div class="fg"><label>Beschreibung (optional)</label><textarea class="field" id="e_body" placeholder="Kurz: Inhalt, Ausgabe/Version, Sprache …">'+esc(a.body)+'</textarea></div>'+
+      '<div class="note" style="margin-top:2px">Das eigentliche Dokument unten als <b>Datei</b> (PDF/Word/…) anhängen.</div>';
   } else {
     fields='<div class="fg"><label>Inhalt</label><textarea class="field" id="e_body" style="min-height:200px" placeholder="Text … &#10;&#10;**fett**, *kursiv*, „- “ für Aufzählung, „# “ für Überschrift.">'+esc(a.body)+'</textarea></div>';
   }
@@ -686,7 +718,7 @@ function drawEditor(){
     '<div class="detail">'+
     '<div class="fg"><label>Art</label><div class="typegrid" id="typeGrid">'+typeGrid+'</div></div>'+
     '<div class="fg"><label>'+(a.type==="maschine"?"Maschine / Bezeichnung":"Titel")+'</label><input class="field" id="e_title" placeholder="'+(a.type==="maschine"?"z. B. Lepton 5100 – Demo 1":"Kurzer, suchbarer Titel")+'" value="'+esc(a.title)+'"></div>'+
-    (a.type==="maschine"?"":'<div class="fg"><label>Kategorie / Baugruppe (optional)</label><input class="field" id="e_cat" placeholder="z. B. Sieb, Hydraulik, Förderband" value="'+esc(a.cat)+'"></div>')+
+    ((a.type==="maschine"||a.type==="handbuch")?"":'<div class="fg"><label>Kategorie / Baugruppe (optional)</label><input class="field" id="e_cat" placeholder="z. B. Sieb, Hydraulik, Förderband" value="'+esc(a.cat)+'"></div>')+
     fields+
     '<div class="fg"><label>Schlagwörter (mit Komma trennen)</label><input class="field" id="e_tags" placeholder="z. B. fehlercode E12, lager, schmierung" value="'+esc((a.tags||[]).join(", "))+'"></div>'+
     '<div class="fg"><label>Bilder</label><button class="btn ghost" id="addImg"><svg viewBox="0 0 24 24"><path d="M21 15l-5-5L5 21"/><path d="M3 5h18v14H3z"/><circle cx="8.5" cy="9.5" r="1.5"/></svg>Bild hinzufügen</button><div class="thumbs" id="thumbs">'+thumbs+'</div></div>'+
@@ -698,6 +730,7 @@ function drawEditor(){
   $("cancelBtn").onclick=function(){if(EDIT&&DB.arts[EDIT.id])openDetail(EDIT.id);else showView("viewList");};
   var picks=$("typeGrid").querySelectorAll(".typepick");
   for(var i=0;i<picks.length;i++)picks[i].onclick=function(){collectEditor();EDIT.type=this.getAttribute("data-t");drawEditor();};
+  if($("dokGrid")){var dps=$("dokGrid").querySelectorAll(".typepick");for(var dpi=0;dpi<dps.length;dpi++)dps[dpi].onclick=function(){collectEditor();EDIT.dokart=this.getAttribute("data-d");drawEditor();};}
   $("addImg").onclick=function(){_imgTarget="editor";$("imgIn").click();};
   var xs=$("thumbs").querySelectorAll(".x");
   for(var j=0;j<xs.length;j++)xs[j].onclick=function(){var idx=+this.getAttribute("data-i");collectEditor();EDIT.images.splice(idx,1);drawEditor();};
@@ -811,7 +844,7 @@ function openSettings(){
     '</details>'):'')+
     '<hr class="s">'+
     '<button class="btn danger block" id="logoutBtn">Abmelden</button>'+
-    '<div style="text-align:center;color:#aab;font-size:11px;margin-top:14px">Alzipedia '+"v12"+(isAdmin()?" · Admin":"")+'</div>'+
+    '<div style="text-align:center;color:#aab;font-size:11px;margin-top:14px">Alzipedia '+"v13"+(isAdmin()?" · Admin":"")+'</div>'+
     '</div>';
   $("viewSet").innerHTML=h;showView("viewSet");setConn(sbReady()?(navigator.onLine?"ok":"off"):"");
   $("setBack").onclick=function(){showView("viewList");};
