@@ -303,6 +303,8 @@ function authKeyHeaders(){return {apikey:SB.key,"Content-Type":"application/json
 function authValid(){return !!(AUTH&&AUTH.access_token);}
 function nameFromEmail(e){return e?String(e).split("@")[0]:"";}
 function curFromAuth(){return AUTH?{n:AUTH.user.name,email:AUTH.user.email,id:AUTH.user.id}:null;}
+var ADMINS=["martin@alzinger-maschinenbau.de"];
+function isAdmin(){return !!(CUR&&CUR.email&&ADMINS.indexOf((CUR.email||"").toLowerCase())>=0);}
 function authStore(j){
   var u=j.user||{};
   var name=(u.user_metadata&&(u.user_metadata.name||u.user_metadata.full_name))||nameFromEmail(u.email);
@@ -621,6 +623,7 @@ function openSettings(){
     '<h2>Einstellungen</h2>'+
     '<div class="setrow"><span class="l">Angemeldet als</span><b>'+esc((CUR&&CUR.n)||"")+'</b></div>'+
     '<div class="setrow"><span class="l conn"><span class="led"></span><span class="t"></span></span><button class="btn ghost" id="syncBtn" style="padding:8px 12px;font-size:13px">Jetzt sync</button></div>'+
+    (isAdmin()?(
     '<h4 style="margin:18px 0 6px">Cloud (geteilte Datenbank)</h4>'+
     '<div class="note">Damit alle Techniker denselben Stand sehen, einmalig ein <b>Supabase</b>-Projekt verbinden. Ohne Verbindung läuft Alzipedia rein lokal auf diesem Gerät.</div>'+
     '<div class="fg"><label>Project-URL</label><input class="field" id="sbUrl" placeholder="https://xxxx.supabase.co" value="'+esc(SB.url||"")+'"></div>'+
@@ -630,19 +633,20 @@ function openSettings(){
     '<div style="font-size:13px;line-height:1.6;margin-top:8px">1. Auf <b>supabase.com</b> ein Projekt anlegen (Region Frankfurt/EU).<br>2. Im <b>SQL Editor</b> dies ausführen:</div>'+
     '<div class="code">'+esc(SETUP_SQL)+'</div>'+
     '<div style="font-size:13px;line-height:1.6">3. <b>Authentication → Users → Add user</b>: für jeden Techniker E-Mail + Passwort anlegen (Häkchen „Auto Confirm User").<br>4. Unter <b>Project Settings → API</b> die <b>Project URL</b> und den <b>Publishable key</b> (sb_publishable_…) kopieren und oben eintragen → <b>Verbinden</b>.</div>'+
-    '</details>'+
+    '</details>'):'')+
     '<hr class="s">'+
     '<button class="btn danger block" id="logoutBtn">Abmelden</button>'+
-    '<div style="text-align:center;color:#aab;font-size:11px;margin-top:14px">Alzipedia '+"v2"+'</div>'+
+    '<div style="text-align:center;color:#aab;font-size:11px;margin-top:14px">Alzipedia '+"v6"+(isAdmin()?" · Admin":"")+'</div>'+
     '</div>';
   $("viewSet").innerHTML=h;showView("viewSet");setConn(sbReady()?(navigator.onLine?"ok":"off"):"");
   $("setBack").onclick=function(){showView("viewList");};
   $("syncBtn").onclick=function(){toast("Synchronisiere …");syncPull().then(function(){renderTabs();renderList();toast("Aktualisiert");});};
-  $("sbSave").onclick=function(){
-    SB={url:($("sbUrl").value||"").trim(),key:($("sbKey").value||"").trim()};lsSet(LS_SB,SB);
+  if($("sbSave"))$("sbSave").onclick=function(){
+    var u=($("sbUrl").value||"").trim();try{u=new URL(u).origin;}catch(e){u=u.replace(/\/+$/,"");}
+    SB={url:u,key:($("sbKey").value||"").trim()};lsSet(LS_SB,SB);
     toast("Verbinde …");syncPull().then(function(){renderTabs();renderList();openSettings();toast(sbReady()?"Verbunden":"Eingaben prüfen");});
   };
-  $("sbClear").onclick=function(){if(!confirm("Verbindung trennen und abmelden?"))return;authForceLogout();SB={url:"",key:""};lsSet(LS_SB,SB);location.reload();};
+  if($("sbClear"))$("sbClear").onclick=function(){if(!confirm("Verbindung trennen und abmelden?"))return;authForceLogout();SB={url:"",key:""};lsSet(LS_SB,SB);location.reload();};
   $("logoutBtn").onclick=function(){authLogout().then(function(){location.reload();});};
 }
 
