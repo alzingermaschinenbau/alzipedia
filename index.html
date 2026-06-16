@@ -56,6 +56,21 @@ header.top{position:sticky;top:0;z-index:30;background:linear-gradient(135deg,va
 .stat.active{box-shadow:0 0 0 2px currentColor inset}
 .stat .num{font-size:26px;font-weight:800;line-height:1}
 .stat .lab{font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);margin-top:6px;line-height:1.2}
+.reminders{border:1px solid var(--line);border-radius:14px;background:#fff;padding:11px 13px;margin-bottom:16px}
+.reminders .rmh{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);margin-bottom:4px}
+.rmrow{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px solid var(--line);cursor:pointer;font-size:14px}
+.rmrow:first-of-type{border-top:0}
+.rmrow .rmw{font-weight:600}
+.rmrow .rmd{color:var(--muted);font-size:12px;white-space:nowrap}
+.rmrow.soon .rmd{color:#b45309;font-weight:700}
+.rmrow.over .rmd{color:#c00000;font-weight:800}
+@media print{
+  header.top,.fab,.searchbar,.tabs,#home,.toast,.lb,#backBtn,.detail .row{display:none!important}
+  .wrap{padding:0;max-width:none}
+  .detail{box-shadow:none;border:0}
+  body{background:#fff}
+  .shots img{height:auto;max-height:220px}
+}
 
 /* Suche + Tabs */
 .searchbar{display:flex;gap:8px;margin:4px 0 12px}
@@ -449,6 +464,19 @@ function plain(s){return String(s||"").replace(/[*#>\-•]/g," ").replace(/\s+/g
 var FILTER="";   // type-id oder "" = alle
 var QTEXT="";
 function capit(s){s=String(s||"");return s.charAt(0).toUpperCase()+s.slice(1);}
+function daysUntil(ds){var d=new Date(ds);if(isNaN(d))return null;d.setHours(0,0,0,0);var t=new Date();t.setHours(0,0,0,0);return Math.round((d-t)/86400000);}
+function reminders(){
+  var out=[];
+  artsArr().forEach(function(a){
+    if(a.type!=="maschine")return;
+    var items=[];
+    if(a.tuevBis)items.push({was:"TÜV",datum:a.tuevBis});
+    (a.termine||[]).forEach(function(tm){if(tm.datum)items.push({was:tm.was||"Termin",datum:tm.datum});});
+    items.forEach(function(it){var dd=daysUntil(it.datum);if(dd===null)return;if(dd<=30)out.push({id:a.id,title:a.title,was:it.was,datum:it.datum,days:dd});});
+  });
+  out.sort(function(x,y){return x.days-y.days;});
+  return out;
+}
 function renderHome(){
   var hm=$("home");if(!hm)return;
   var name=capit(((CUR&&CUR.n)||"").split(/\s+/)[0]||"");
@@ -457,10 +485,20 @@ function renderHome(){
     return '<div class="stat'+(FILTER===t.id?" active":"")+'" data-t="'+t.id+'" style="background:'+t.col+'14;color:'+t.col+'">'+
       '<div class="num">'+(counts[t.id]||0)+'</div><div class="lab">'+esc(t.label)+'</div></div>';
   }).join("");
+  var rem=reminders(),remHtml="";
+  if(rem.length){
+    remHtml='<div class="reminders"><div class="rmh">⏰ Fällige Termine</div>'+rem.slice(0,8).map(function(r){
+      var cls=r.days<0?"over":(r.days<=7?"soon":"");
+      var txt=r.days<0?("überfällig seit "+(-r.days)+" T"):(r.days===0?"heute fällig":("in "+r.days+" T"));
+      return '<div class="rmrow '+cls+'" data-id="'+esc(r.id)+'"><span class="rmw">'+esc(r.was)+' · '+esc(r.title||"")+'</span><span class="rmd">'+esc(fmtDate(r.datum))+' · '+txt+'</span></div>';
+    }).join("")+'</div>';
+  }
   hm.innerHTML='<div class="greet"><h2>Servus, '+esc(name||"")+'!</h2><p>Dein Service-Wissen für die Lepton 5100</p></div>'+
-    '<div class="stats">'+cards+'</div>';
+    remHtml+'<div class="stats">'+cards+'</div>';
   var st=hm.querySelectorAll(".stat");
   for(var i=0;i<st.length;i++)st[i].onclick=function(){var t=this.getAttribute("data-t");FILTER=(FILTER===t?"":t);renderTabs();renderList();try{window.scrollTo(0,0);}catch(e){}};
+  var rr=hm.querySelectorAll(".rmrow");
+  for(var k=0;k<rr.length;k++)rr[k].onclick=function(){openDetail(this.getAttribute("data-id"));};
 }
 function renderTabs(){
   var all=artsArr();
@@ -538,6 +576,8 @@ function openDetail(id){
     if(a.kunde)sd.push(["Kunde / Standort",a.kunde]);
     if(a.tuevBis)sd.push(["TÜV gültig bis",fmtDate(a.tuevBis)]);
     if(sd.length)body+='<div class="mtable">'+sd.map(function(r){return '<div class="mrow"><span class="mk">'+esc(r[0])+'</span><span class="mv">'+esc(r[1])+'</span></div>';}).join("")+'</div>';
+    if((a.termine||[]).length){body+='<div class="sec"><div class="lab">Termine &amp; Fristen</div><div class="mtable">'+
+      a.termine.slice().sort(function(x,y){return (x.datum||"").localeCompare(y.datum||"");}).map(function(tm){var dd=daysUntil(tm.datum);var note=(dd===null)?"":(dd<0?" · überfällig":(dd<=30?" · in "+dd+" T":""));return '<div class="mrow"><span class="mk">'+esc(tm.was||"")+'</span><span class="mv">'+esc(tm.datum?fmtDate(tm.datum):"")+esc(note)+'</span></div>';}).join("")+'</div></div>';}
     if((a.komponenten||[]).length){body+='<div class="sec"><div class="lab">Komponenten &amp; Seriennummern</div><div class="mtable">'+
       a.komponenten.map(function(k){return '<div class="mrow"><span class="mk">'+esc(k.bez||"")+'</span><span class="mv">'+esc(k.sn||"")+'</span></div>';}).join("")+'</div></div>';}
     if(a.ausstattung)body+='<div class="sec"><div class="lab">Ausstattung</div>'+renderText(a.ausstattung)+'</div>';
@@ -560,11 +600,13 @@ function openDetail(id){
     ((a.tags&&a.tags.length)?'<div class="taglist" style="margin-top:14px">'+a.tags.map(function(x){return '<span class="tag">'+esc(x)+'</span>';}).join("")+'</div>':"")+
     '<hr class="s">'+
     '<div class="row"><button class="btn ghost" id="editBtn"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>Bearbeiten</button>'+
+    '<button class="btn ghost" id="printBtn"><svg viewBox="0 0 24 24"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>PDF</button>'+
     '<button class="btn danger" id="delBtn"><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>Löschen</button></div>'+
     '</div>';
   $("viewDetail").innerHTML=h;showView("viewDetail");
   $("backBtn").onclick=function(){showView("viewList");};
   $("editBtn").onclick=function(){openEditor(id);};
+  $("printBtn").onclick=function(){window.print();};
   $("delBtn").onclick=function(){if(confirm("Diesen Artikel wirklich löschen?")){deleteArticle(id);toast("Gelöscht");showView("viewList");renderTabs();renderList();}};
   var shots=$("viewDetail").querySelectorAll(".shots img");
   for(var i=0;i<shots.length;i++)shots[i].onclick=function(){lightbox(this.getAttribute("data-u"));};
@@ -575,7 +617,7 @@ var EDIT=null;        // aktuell bearbeiteter Artikel (Arbeitskopie)
 function openEditor(id,presetType){
   if(id&&DB.arts[id]){EDIT=JSON.parse(JSON.stringify(DB.arts[id]));}
   else {EDIT={id:uid(),type:presetType||FILTER||"stoerung",title:"",body:"",sym:"",urs:"",los:"",cat:"",tags:[],images:[],files:[],
-    modell:"",fahrgestellnr:"",baujahr:"",kunde:"",tuevBis:"",ausstattung:"",komponenten:[],reparaturen:[]};}
+    modell:"",fahrgestellnr:"",baujahr:"",kunde:"",tuevBis:"",ausstattung:"",komponenten:[],reparaturen:[],termine:[]};}
   drawEditor();showView("viewEdit");
 }
 function drawEditor(){
@@ -590,11 +632,13 @@ function drawEditor(){
   } else if(a.type==="maschine"){
     var komp=(a.komponenten||[]).map(function(k,idx){return '<div class="kvrow"><input class="field kbez" value="'+esc(k.bez||"")+'" placeholder="Bauteil (z. B. Motor links)"><input class="field ksn" value="'+esc(k.sn||"")+'" placeholder="Seriennummer"><span class="xrm" data-k="'+idx+'">×</span></div>';}).join("");
     var reps=(a.reparaturen||[]).map(function(r,idx){return '<div class="reprow"><input type="date" class="field rdat" value="'+esc(r.datum||"")+'"><textarea class="field rtxt" placeholder="Was wurde gemacht? Teile, Kosten, Techniker …">'+esc(r.text||"")+'</textarea><span class="xrm" data-r="'+idx+'">×</span></div>';}).join("");
+    var terms=(a.termine||[]).map(function(tm,idx){return '<div class="kvrow"><input class="field twas" value="'+esc(tm.was||"")+'" placeholder="Was (z. B. Service, Ölwechsel)"><input type="date" class="field tdat" value="'+esc(tm.datum||"")+'"><span class="xrm" data-tm="'+idx+'">×</span></div>';}).join("");
     fields='<div class="fg2"><div class="fg"><label>Modell</label><input class="field" id="e_modell" placeholder="z. B. Lepton 5100" value="'+esc(a.modell)+'"></div>'+
       '<div class="fg"><label>Baujahr</label><input class="field" id="e_baujahr" placeholder="z. B. 2021" value="'+esc(a.baujahr)+'"></div></div>'+
       '<div class="fg"><label>Fahrgestellnummer (FIN)</label><input class="field" id="e_fahrgestellnr" placeholder="Fahrgestell-/Seriennummer der Maschine" value="'+esc(a.fahrgestellnr)+'"></div>'+
       '<div class="fg2"><div class="fg"><label>Kunde / Standort</label><input class="field" id="e_kunde" placeholder="z. B. Mustermann GmbH, Wien" value="'+esc(a.kunde)+'"></div>'+
       '<div class="fg"><label>TÜV gültig bis</label><input type="date" class="field" id="e_tuevBis" value="'+esc(a.tuevBis)+'"></div></div>'+
+      '<div class="fg"><label>Termine &amp; Fristen (Wartung, Service, Ölwechsel …)</label><div id="termList">'+terms+'</div><button class="btn ghost" id="addTerm" type="button"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Termin</button></div>'+
       '<div class="fg"><label>Komponenten &amp; Seriennummern</label><div id="kompList">'+komp+'</div><button class="btn ghost" id="addKomp" type="button"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Bauteil</button></div>'+
       '<div class="fg"><label>Ausstattung</label><textarea class="field" id="e_ausstattung" placeholder="Sonderausstattung, Optionen … &#10;„- “ für Aufzählung">'+esc(a.ausstattung)+'</textarea></div>'+
       '<div class="fg"><label>Reparaturen / Wartung</label><div id="repList">'+reps+'</div><button class="btn ghost" id="addRep" type="button"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Eintrag</button></div>'+
@@ -628,10 +672,13 @@ function drawEditor(){
   for(var k=0;k<fxs.length;k++)fxs[k].onclick=function(){var idx=+this.getAttribute("data-fi");collectEditor();(EDIT.files=EDIT.files||[]).splice(idx,1);drawEditor();};
   if($("addKomp"))$("addKomp").onclick=function(){collectEditor();(EDIT.komponenten=EDIT.komponenten||[]).push({bez:"",sn:""});drawEditor();};
   if($("addRep"))$("addRep").onclick=function(){collectEditor();(EDIT.reparaturen=EDIT.reparaturen||[]).push({datum:new Date().toISOString().slice(0,10),text:""});drawEditor();};
+  if($("addTerm"))$("addTerm").onclick=function(){collectEditor();(EDIT.termine=EDIT.termine||[]).push({was:"",datum:""});drawEditor();};
   var krm=$("viewEdit").querySelectorAll("#kompList .xrm");
   for(var m=0;m<krm.length;m++)krm[m].onclick=function(){var idx=+this.getAttribute("data-k");collectEditor();EDIT.komponenten.splice(idx,1);drawEditor();};
   var rrm=$("viewEdit").querySelectorAll("#repList .xrm");
   for(var n=0;n<rrm.length;n++)rrm[n].onclick=function(){var idx=+this.getAttribute("data-r");collectEditor();EDIT.reparaturen.splice(idx,1);drawEditor();};
+  var trm=$("viewEdit").querySelectorAll("#termList .xrm");
+  for(var p=0;p<trm.length;p++)trm[p].onclick=function(){var idx=+this.getAttribute("data-tm");collectEditor();EDIT.termine.splice(idx,1);drawEditor();};
   $("saveBtn").onclick=function(){
     collectEditor();
     if(!EDIT.title.trim()){toast("Bitte einen Titel eingeben");return;}
@@ -656,6 +703,7 @@ function collectEditor(){
   if($("e_ausstattung"))EDIT.ausstattung=$("e_ausstattung").value;
   if($("kompList")){var kr=$("kompList").querySelectorAll(".kvrow");EDIT.komponenten=[];for(var i=0;i<kr.length;i++){var b=kr[i].querySelector(".kbez").value,s=kr[i].querySelector(".ksn").value;if((b&&b.trim())||(s&&s.trim()))EDIT.komponenten.push({bez:b,sn:s});}}
   if($("repList")){var rr=$("repList").querySelectorAll(".reprow");EDIT.reparaturen=[];for(var j=0;j<rr.length;j++){var d=rr[j].querySelector(".rdat").value,t=rr[j].querySelector(".rtxt").value;if((d&&d.trim())||(t&&t.trim()))EDIT.reparaturen.push({datum:d,text:t});}}
+  if($("termList")){var tt=$("termList").querySelectorAll(".kvrow");EDIT.termine=[];for(var q=0;q<tt.length;q++){var tw=tt[q].querySelector(".twas").value,td=tt[q].querySelector(".tdat").value;if((tw&&tw.trim())||(td&&td.trim()))EDIT.termine.push({was:tw,datum:td});}}
 }
 
 /* ---- Bilder hinzufuegen ---- */
@@ -728,7 +776,7 @@ function openSettings(){
     '</details>'):'')+
     '<hr class="s">'+
     '<button class="btn danger block" id="logoutBtn">Abmelden</button>'+
-    '<div style="text-align:center;color:#aab;font-size:11px;margin-top:14px">Alzipedia '+"v10"+(isAdmin()?" · Admin":"")+'</div>'+
+    '<div style="text-align:center;color:#aab;font-size:11px;margin-top:14px">Alzipedia '+"v11"+(isAdmin()?" · Admin":"")+'</div>'+
     '</div>';
   $("viewSet").innerHTML=h;showView("viewSet");setConn(sbReady()?(navigator.onLine?"ok":"off"):"");
   $("setBack").onclick=function(){showView("viewList");};
