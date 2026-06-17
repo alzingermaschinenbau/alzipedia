@@ -170,10 +170,12 @@ textarea.field{min-height:120px;resize:vertical;line-height:1.5}
 .dblsec>summary:before{content:"▸";color:var(--muted)}
 .dblsec[open]>summary:before{content:"▾"}
 .dblsec .dbc{font-size:11px;color:var(--muted);font-weight:600}
-.dblwrap{overflow-x:auto;border-top:1px solid var(--line)}
-.dblt{border-collapse:collapse;font-size:13px;min-width:100%}
-.dblt td{border:1px solid var(--line);padding:5px 8px;white-space:nowrap;vertical-align:top}
-.dblt tr:nth-child(odd) td{background:#fafbfc}
+.dllist{border-top:1px solid var(--line)}
+.dlh{font-weight:800;font-size:13px;padding:11px 14px 5px;background:#fafbfc;border-bottom:1px solid var(--line)}
+.dlr{display:flex;gap:12px;padding:8px 14px;border-bottom:1px solid var(--line)}
+.dlr:last-child{border-bottom:0}
+.dlr .dlk{flex:0 0 38%;color:var(--muted);font-size:13px;font-weight:600;word-break:break-word}
+.dlr .dlv{flex:1;font-size:13px;font-weight:600;word-break:break-word}
 .subbar{display:flex;gap:8px;overflow-x:auto;margin:0 0 12px;padding-bottom:2px}
 .subchip{flex:0 0 auto;border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 13px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap}
 .subchip.active{background:#ea580c;border-color:#ea580c;color:#fff}
@@ -667,10 +669,13 @@ function openDetail(id){
       '<button class="btn ghost" id="qrBtn"><svg viewBox="0 0 24 24"><path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3z"/><path d="M14 14h3v3h-3zM18 18h3v3h-3z"/></svg>'+esc(t("btn_show_qr"))+'</button>'+
       '<div id="qrBox" class="qrbox hidden"></div></div>';
     (a.dbl||[]).forEach(function(d){
-      body+='<details class="dblsec"><summary>'+esc(d.n)+' <span class="dbc">'+((d.r||[]).length)+'</span></summary>'+
-        '<div class="dblwrap"><table class="dblt"><tbody>'+
-        (d.r||[]).map(function(rw){return '<tr>'+rw.map(function(c){return '<td>'+esc(c||"")+'</td>';}).join("")+'</tr>';}).join("")+
-        '</tbody></table></div></details>';
+      var rows=(d.r||[]).map(function(rw){return rw.map(function(c){return (c==null?"":""+c).trim();}).filter(function(c){return c;});}).filter(function(c){return c.length;});
+      if(!rows.length)return;
+      var lines=rows.map(function(cells){
+        if(cells.length===1)return '<div class="dlh">'+esc(cells[0])+'</div>';
+        return '<div class="dlr"><span class="dlk">'+esc(cells[0])+'</span><span class="dlv">'+esc(cells.slice(1).join(" · "))+'</span></div>';
+      }).join("");
+      body+='<details class="dblsec"><summary>'+esc(d.n)+' <span class="dbc">'+rows.length+'</span></summary><div class="dllist">'+lines+'</div></details>';
     });
   } else if(a.type==="handbuch"){
     var dd=[];
@@ -956,7 +961,7 @@ function openSettings(){
     '</details>'):'')+
     '<hr class="s">'+
     '<button class="btn danger block" id="logoutBtn">'+esc(t("logout"))+'</button>'+
-    '<div style="text-align:center;color:#aab;font-size:11px;margin-top:14px">Alzipedia '+"v17"+(isAdmin()?" · Admin":"")+'</div>'+
+    '<div style="text-align:center;color:#aab;font-size:11px;margin-top:14px">Alzipedia '+"v18"+(isAdmin()?" · Admin":"")+'</div>'+
     '</div>';
   $("viewSet").innerHTML=h;showView("viewSet");setConn(sbReady()?(navigator.onLine?"ok":"off"):"");
   $("setBack").onclick=function(){showView("viewList");};
