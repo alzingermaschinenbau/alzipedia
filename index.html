@@ -170,6 +170,14 @@ textarea.field{min-height:120px;resize:vertical;line-height:1.5}
 .dblsec>summary:before{content:"▸";color:var(--muted)}
 .dblsec[open]>summary:before{content:"▾"}
 .dblsec .dbc{font-size:11px;color:var(--muted);font-weight:600}
+.standbanner{display:flex;align-items:center;gap:13px;background:linear-gradient(135deg,rgba(22,163,74,.10),rgba(22,163,74,.03));border:1px solid rgba(22,163,74,.45);border-radius:13px;padding:13px 15px;margin:4px 0 14px}
+.standbanner svg{width:28px;height:28px;fill:none;stroke:#16a34a;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto}
+.standbanner .sbl{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:#15803d;font-weight:800}
+.standbanner .sbd{font-size:19px;font-weight:800;line-height:1.1}
+.grouphd{font-size:16px;font-weight:800;margin:22px 0 10px;padding-bottom:7px;border-bottom:2px solid var(--line);display:flex;align-items:center;gap:9px}
+.grouphd .ghi{font-size:17px}
+.reprow-d.deliv{border-left-color:#c00000}
+.reprow-d.deliv .repd{color:#c00000}
 .dllist{border-top:1px solid var(--line)}
 .dlh{font-weight:800;font-size:13px;padding:11px 14px 5px;background:#fafbfc;border-bottom:1px solid var(--line)}
 .dlr{display:flex;gap:12px;padding:8px 14px;border-bottom:1px solid var(--line)}
@@ -336,6 +344,13 @@ var I18N2={
  fr:{l_type:"Type",l_title:"Titre",l_machine_name:"Machine / désignation",l_category:"Catégorie / sous-ensemble (option.)",l_tags:"Mots-clés (séparés par virgule)",l_images:"Images",btn_add_image:"Ajouter une image",l_files:"Fichiers (PDF, Word, Excel …)",btn_add_file:"Ajouter un fichier",l_symptom:"Symptôme / défaut",l_cause:"Cause possible",l_solution:"Solution / procédure",l_notes:"Notes complémentaires (option.)",l_content:"Contenu",l_model:"Modèle",l_year:"Année",l_vin:"Numéro de châssis (VIN)",l_vin_short:"Numéro de châssis",l_customer:"Client / site",l_tuev:"Contrôle valable jusqu'au",l_dates:"Échéances (entretien, révision, vidange …)",l_dates_short:"Échéances",btn_date:"Échéance",l_components:"Composants & numéros de série",btn_part:"Pièce",l_equipment:"Équipement",l_repairs:"Réparations / entretien",btn_entry:"Entrée",l_linked:"Guides & docs liés",l_doctype:"Type de document",l_description:"Description (option.)",note_machine_files:"Joignez ci-dessous les documents de contrôle, factures et photos en images/fichiers.",note_doc_file:"Joignez le document lui-même ci-dessous en fichier (PDF/Word/…).",sec_qr:"QR code de cette machine",qr_hint:"Collez et scannez pour ouvrir ce carnet.",btn_show_qr:"Afficher le QR code",qr_save:"Enregistrez le QR (capture/« PDF ») et imprimez-le.",overdue_short:"en retard"}
 };
 for(var _l in I18N2){for(var _k in I18N2[_l])I18N[_l][_k]=I18N2[_l][_k];}
+var I18N3={
+ de:{l_delivery:"Auslieferungsdatum",stand:"Stand zur Auslieferung",asbuilt:"Auslieferungszustand",logbook:"Tagebuch – Wartung & Reparaturen",specs:"Technische Datenblätter",delivered_on:"ausgeliefert am",no_entries:"Noch keine Tagebuch-Einträge."},
+ en:{l_delivery:"Delivery date",stand:"As-delivered state",asbuilt:"As-delivered configuration",logbook:"Logbook – service & repairs",specs:"Technical datasheets",delivered_on:"delivered on",no_entries:"No logbook entries yet."},
+ pl:{l_delivery:"Data dostawy",stand:"Stan w chwili dostawy",asbuilt:"Konfiguracja przy dostawie",logbook:"Dziennik – serwis i naprawy",specs:"Karty danych technicznych",delivered_on:"dostarczono",no_entries:"Brak wpisów w dzienniku."},
+ fr:{l_delivery:"Date de livraison",stand:"État à la livraison",asbuilt:"Configuration à la livraison",logbook:"Journal – entretien & réparations",specs:"Fiches techniques",delivered_on:"livré le",no_entries:"Aucune entrée de journal."}
+};
+for(var _l3 in I18N3){for(var _k3 in I18N3[_l3])I18N[_l3][_k3]=I18N3[_l3][_k3];}
 var LANG=lsGet(LS_LANG,"de");if(!I18N[LANG])LANG="de";
 function t(k,vars){var s=(I18N[LANG]&&I18N[LANG][k])||I18N.de[k]||k;if(vars)for(var v in vars)s=s.replace("{"+v+"}",vars[v]);return s;}
 function typeLabel(tp){var k="t_"+(tp&&tp.id?tp.id:tp);return (I18N[LANG]&&I18N[LANG][k])||(tp&&tp.label)||k;}
@@ -646,6 +661,10 @@ function openDetail(id){
     if(a.los)body+='<div class="sec los"><div class="lab">'+esc(t("l_solution"))+'</div>'+renderText(a.los)+'</div>';
     if(a.body)body+='<div class="body" style="margin-top:12px">'+renderText(a.body)+'</div>';
   } else if(a.type==="maschine"){
+    // Auslieferungs-Stand-Banner
+    if(a.auslieferung)body+='<div class="standbanner"><svg viewBox="0 0 24 24"><path d="M20 7 12 3 4 7l8 4 8-4z"/><path d="M4 7v10l8 4 8-4V7"/><path d="M12 11v10"/></svg>'+
+      '<div><div class="sbl">'+esc(t("stand"))+'</div><div class="sbd">'+esc(fmtDate(a.auslieferung))+'</div></div></div>';
+    // Stammdaten
     var sd=[];
     if(a.modell)sd.push([t("l_model"),a.modell]);
     if(a.fahrgestellnr)sd.push([t("l_vin_short"),a.fahrgestellnr]);
@@ -653,14 +672,35 @@ function openDetail(id){
     if(a.kunde)sd.push([t("l_customer"),a.kunde]);
     if(a.tuevBis)sd.push([t("l_tuev"),fmtDate(a.tuevBis)]);
     if(sd.length)body+='<div class="mtable">'+sd.map(function(r){return '<div class="mrow"><span class="mk">'+esc(r[0])+'</span><span class="mv">'+esc(r[1])+'</span></div>';}).join("")+'</div>';
+    // Termine & Fristen
     if((a.termine||[]).length){body+='<div class="sec"><div class="lab">'+esc(t("l_dates_short"))+'</div><div class="mtable">'+
       a.termine.slice().sort(function(x,y){return (x.datum||"").localeCompare(y.datum||"");}).map(function(tm){var dd=daysUntil(tm.datum);var note=(dd===null)?"":(dd<0?" · "+t("overdue_short"):(dd<=30?" · "+t("due_in",{d:dd}):""));return '<div class="mrow"><span class="mk">'+esc(tm.was||"")+'</span><span class="mv">'+esc(tm.datum?fmtDate(tm.datum):"")+esc(note)+'</span></div>';}).join("")+'</div></div>';}
-    if((a.komponenten||[]).length){body+='<div class="sec"><div class="lab">'+esc(t("l_components"))+'</div><div class="mtable">'+
+    // === Auslieferungszustand ===
+    var ab="";
+    if((a.komponenten||[]).length){ab+='<div class="sec"><div class="lab">'+esc(t("l_components"))+'</div><div class="mtable">'+
       a.komponenten.map(function(k){return '<div class="mrow"><span class="mk">'+esc(k.bez||"")+'</span><span class="mv">'+esc(k.sn||"")+'</span></div>';}).join("")+'</div></div>';}
-    if(a.ausstattung)body+='<div class="sec"><div class="lab">'+esc(t("l_equipment"))+'</div>'+renderText(a.ausstattung)+'</div>';
-    if((a.reparaturen||[]).length){body+='<div class="sec"><div class="lab">'+esc(t("l_repairs"))+'</div>'+
-      a.reparaturen.slice().sort(function(x,y){return (y.datum||"").localeCompare(x.datum||"");}).map(function(r){
-        return '<div class="reprow-d"><div class="repd">'+esc(r.datum?fmtDate(r.datum):"")+'</div><div class="rept">'+renderText(r.text||"")+'</div></div>';}).join("")+'</div>';}
+    if(a.ausstattung)ab+='<div class="sec"><div class="lab">'+esc(t("l_equipment"))+'</div>'+renderText(a.ausstattung)+'</div>';
+    if((a.dbl||[]).length){
+      ab+='<div class="lab" style="margin:14px 0 4px">'+esc(t("specs"))+'</div>';
+      (a.dbl||[]).forEach(function(d){
+        var rows=(d.r||[]).map(function(rw){return rw.map(function(c){return (c==null?"":""+c).trim();}).filter(function(c){return c;});}).filter(function(c){return c.length;});
+        if(!rows.length)return;
+        var lines=rows.map(function(cells){
+          if(cells.length===1)return '<div class="dlh">'+esc(cells[0])+'</div>';
+          return '<div class="dlr"><span class="dlk">'+esc(cells[0])+'</span><span class="dlv">'+esc(cells.slice(1).join(" · "))+'</span></div>';
+        }).join("");
+        ab+='<details class="dblsec"><summary>'+esc(d.n)+' <span class="dbc">'+rows.length+'</span></summary><div class="dllist">'+lines+'</div></details>';
+      });
+    }
+    if(ab)body+='<div class="grouphd"><span class="ghi">📦</span>'+esc(t("asbuilt"))+'</div>'+ab;
+    // === Tagebuch ===
+    var log=(a.reparaturen||[]).map(function(r){return {datum:r.datum,text:r.text,deliv:false};});
+    if(a.auslieferung)log.push({datum:a.auslieferung,text:"**"+t("delivered_on")+" "+fmtDate(a.auslieferung)+"**"+(a.modell?" · "+a.modell:"")+(a.fahrgestellnr?" · FIN "+a.fahrgestellnr:""),deliv:true});
+    log.sort(function(x,y){return (y.datum||"").localeCompare(x.datum||"");});
+    body+='<div class="grouphd"><span class="ghi">📖</span>'+esc(t("logbook"))+'</div>';
+    if(log.length)body+='<div class="timeline">'+log.map(function(r){return '<div class="reprow-d'+(r.deliv?" deliv":"")+'"><div class="repd">'+esc(r.datum?fmtDate(r.datum):"")+'</div><div class="rept">'+renderText(r.text||"")+'</div></div>';}).join("")+'</div>';
+    else body+='<div class="muted2" style="padding:2px 2px 10px">'+esc(t("no_entries"))+'</div>';
+    // Verknüpfte Doku + QR
     var lk=(a.links||[]).map(function(lid){return DB.arts[lid];}).filter(function(x){return x&&!x.deleted;});
     if(lk.length){body+='<div class="sec"><div class="lab">'+esc(t("l_linked"))+'</div>'+
       lk.map(function(x){return '<div class="lnkrow" data-go="'+esc(x.id)+'"><span class="dot" style="background:'+typeOf(x.type).col+'"></span><span class="lktt">'+esc(x.title||"(ohne Titel)")+'</span><span class="lkty">'+esc(typeLabel(typeOf(x.type)))+'</span></div>';}).join("")+'</div>';}
@@ -668,15 +708,6 @@ function openDetail(id){
       '<div class="muted2" style="margin-bottom:8px">'+esc(t("qr_hint"))+'</div>'+
       '<button class="btn ghost" id="qrBtn"><svg viewBox="0 0 24 24"><path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3z"/><path d="M14 14h3v3h-3zM18 18h3v3h-3z"/></svg>'+esc(t("btn_show_qr"))+'</button>'+
       '<div id="qrBox" class="qrbox hidden"></div></div>';
-    (a.dbl||[]).forEach(function(d){
-      var rows=(d.r||[]).map(function(rw){return rw.map(function(c){return (c==null?"":""+c).trim();}).filter(function(c){return c;});}).filter(function(c){return c.length;});
-      if(!rows.length)return;
-      var lines=rows.map(function(cells){
-        if(cells.length===1)return '<div class="dlh">'+esc(cells[0])+'</div>';
-        return '<div class="dlr"><span class="dlk">'+esc(cells[0])+'</span><span class="dlv">'+esc(cells.slice(1).join(" · "))+'</span></div>';
-      }).join("");
-      body+='<details class="dblsec"><summary>'+esc(d.n)+' <span class="dbc">'+rows.length+'</span></summary><div class="dllist">'+lines+'</div></details>';
-    });
   } else if(a.type==="handbuch"){
     var dd=[];
     if(a.modell)dd.push([t("l_model"),a.modell]);
@@ -692,7 +723,7 @@ function openDetail(id){
     '<div class="detail">'+
     '<span class="badge" style="background:'+tp.col+'">'+esc(typeLabel(tp))+'</span>'+
     '<h2>'+esc(a.title||"(ohne Titel)")+'</h2>'+
-    '<div class="meta">'+(a.cat?esc(a.cat)+" · ":"")+fmtDate(a.updated)+(a.author?" · "+esc(a.author):"")+'</div>'+
+    '<div class="meta">'+(a.type==="maschine"?[a.modell,a.fahrgestellnr].filter(Boolean).map(esc).join(" · "):((a.cat?esc(a.cat)+" · ":"")+fmtDate(a.updated)+(a.author?" · "+esc(a.author):"")))+'</div>'+
     body+
     (imgs?'<div class="shots">'+imgs+'</div>':"")+
     (docs?'<div class="docs">'+docs+'</div>':"")+
@@ -750,16 +781,17 @@ function dblFromCsv(text){
 function stammFromRaw(raw){
   var key=Object.keys(raw).filter(function(k){return /^Maschine/i.test(k);})[0];if(!key)return {};
   var s=raw[key];function c(z,col){return ((s[z]&&s[z][col-1])||"").toString().trim();}
-  return {modell:c(17,6),fahrgestellnr:c(2,4),baujahr:c(18,6),nr:c(1,3)};
+  return {modell:c(17,6),fahrgestellnr:c(2,4),baujahr:c(18,6),nr:c(1,3),stand:c(1,6)};
 }
 function dblText(a){return (a.dbl||[]).map(function(d){return d.n+" "+(d.r||[]).map(function(r){return r.join(" ");}).join(" ");}).join(" ");}
+function xlDate(v){v=(""+(v==null?"":v)).trim();if(/^\d{4,6}$/.test(v)){var d=new Date(Date.UTC(1899,11,30)+parseInt(v,10)*86400000);if(!isNaN(d))return d.toISOString().slice(0,10);}var d2=new Date(v);if(!isNaN(d2)&&/\d{4}/.test(v))return d2.toISOString().slice(0,10);return "";}
 
 /* ===================== Editor ===================== */
 var EDIT=null;        // aktuell bearbeiteter Artikel (Arbeitskopie)
 function openEditor(id,presetType){
   if(id&&DB.arts[id]){EDIT=JSON.parse(JSON.stringify(DB.arts[id]));}
   else {EDIT={id:uid(),type:presetType||FILTER||"stoerung",title:"",body:"",sym:"",urs:"",los:"",cat:"",tags:[],images:[],files:[],
-    modell:"",fahrgestellnr:"",baujahr:"",kunde:"",tuevBis:"",ausstattung:"",komponenten:[],reparaturen:[],termine:[],links:[],dokart:"",dbl:[]};}
+    modell:"",fahrgestellnr:"",baujahr:"",kunde:"",tuevBis:"",auslieferung:"",ausstattung:"",komponenten:[],reparaturen:[],termine:[],links:[],dokart:"",dbl:[]};}
   drawEditor();showView("viewEdit");
 }
 function drawEditor(){
@@ -780,6 +812,7 @@ function drawEditor(){
       '<div class="fg"><label>'+esc(t("l_vin"))+'</label><input class="field" id="e_fahrgestellnr" placeholder="Fahrgestell-/Seriennummer der Maschine" value="'+esc(a.fahrgestellnr)+'"></div>'+
       '<div class="fg2"><div class="fg"><label>'+esc(t("l_customer"))+'</label><input class="field" id="e_kunde" placeholder="z. B. Mustermann GmbH, Wien" value="'+esc(a.kunde)+'"></div>'+
       '<div class="fg"><label>'+esc(t("l_tuev"))+'</label><input type="date" class="field" id="e_tuevBis" value="'+esc(a.tuevBis)+'"></div></div>'+
+      '<div class="fg"><label>'+esc(t("l_delivery"))+'</label><input type="date" class="field" id="e_auslieferung" value="'+esc(a.auslieferung||"")+'"></div>'+
       '<div class="fg"><label>'+esc(t("l_dates"))+'</label><div id="termList">'+terms+'</div><button class="btn ghost" id="addTerm" type="button"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>'+esc(t("btn_date"))+'</button></div>'+
       '<div class="fg"><label>'+esc(t("l_components"))+'</label><div id="kompList">'+komp+'</div><button class="btn ghost" id="addKomp" type="button"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>'+esc(t("btn_part"))+'</button></div>'+
       '<div class="fg"><label>'+esc(t("l_equipment"))+'</label><textarea class="field" id="e_ausstattung" placeholder="Sonderausstattung, Optionen … &#10;„- “ für Aufzählung">'+esc(a.ausstattung)+'</textarea></div>'+
@@ -861,6 +894,7 @@ function collectEditor(){
   if($("e_fahrgestellnr"))EDIT.fahrgestellnr=$("e_fahrgestellnr").value;
   if($("e_kunde"))EDIT.kunde=$("e_kunde").value;
   if($("e_tuevBis"))EDIT.tuevBis=$("e_tuevBis").value;
+  if($("e_auslieferung"))EDIT.auslieferung=$("e_auslieferung").value;
   if($("e_ausstattung"))EDIT.ausstattung=$("e_ausstattung").value;
   if($("kompList")){var kr=$("kompList").querySelectorAll(".kvrow");EDIT.komponenten=[];for(var i=0;i<kr.length;i++){var b=kr[i].querySelector(".kbez").value,s=kr[i].querySelector(".ksn").value;if((b&&b.trim())||(s&&s.trim()))EDIT.komponenten.push({bez:b,sn:s});}}
   if($("repList")){var rr=$("repList").querySelectorAll(".reprow");EDIT.reparaturen=[];for(var j=0;j<rr.length;j++){var d=rr[j].querySelector(".rdat").value,t=rr[j].querySelector(".rtxt").value;if((d&&d.trim())||(t&&t.trim()))EDIT.reparaturen.push({datum:d,text:t});}}
@@ -931,6 +965,7 @@ $("csvIn").onchange=function(){
       if(!EDIT.modell&&st.modell)EDIT.modell=st.modell;
       if(!EDIT.fahrgestellnr&&st.fahrgestellnr)EDIT.fahrgestellnr=st.fahrgestellnr;
       if(!EDIT.baujahr&&st.baujahr)EDIT.baujahr=st.baujahr;
+      if(!EDIT.auslieferung&&st.stand){var iso=xlDate(st.stand);if(iso)EDIT.auslieferung=iso;}
       if(!EDIT.title&&(st.modell||st.nr))EDIT.title=((st.modell||"Lepton 5100")+" "+(st.nr||"")).trim();
       drawEditor();toast(res.dbl.length+" Datenblätter importiert");
     }catch(e){toast("CSV-Fehler: "+(e&&e.message||e));}
@@ -961,7 +996,7 @@ function openSettings(){
     '</details>'):'')+
     '<hr class="s">'+
     '<button class="btn danger block" id="logoutBtn">'+esc(t("logout"))+'</button>'+
-    '<div style="text-align:center;color:#aab;font-size:11px;margin-top:14px">Alzipedia '+"v18"+(isAdmin()?" · Admin":"")+'</div>'+
+    '<div style="text-align:center;color:#aab;font-size:11px;margin-top:14px">Alzipedia '+"v19"+(isAdmin()?" · Admin":"")+'</div>'+
     '</div>';
   $("viewSet").innerHTML=h;showView("viewSet");setConn(sbReady()?(navigator.onLine?"ok":"off"):"");
   $("setBack").onclick=function(){showView("viewList");};
