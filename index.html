@@ -164,6 +164,16 @@ textarea.field{min-height:120px;resize:vertical;line-height:1.5}
 .qrbox{margin-top:10px;text-align:center}
 .qrimg{width:240px;max-width:100%;height:auto;border:1px solid var(--line);border-radius:10px;padding:8px;background:#fff}
 .qrurl{font-size:11px;color:var(--muted);word-break:break-all;margin:6px 0 4px}
+.dblsec{border:1px solid var(--line);border-radius:12px;margin:10px 0;background:#fff;overflow:hidden}
+.dblsec>summary{cursor:pointer;font-weight:700;padding:12px 14px;list-style:none;display:flex;align-items:center;gap:8px}
+.dblsec>summary::-webkit-details-marker{display:none}
+.dblsec>summary:before{content:"▸";color:var(--muted)}
+.dblsec[open]>summary:before{content:"▾"}
+.dblsec .dbc{font-size:11px;color:var(--muted);font-weight:600}
+.dblwrap{overflow-x:auto;border-top:1px solid var(--line)}
+.dblt{border-collapse:collapse;font-size:13px;min-width:100%}
+.dblt td{border:1px solid var(--line);padding:5px 8px;white-space:nowrap;vertical-align:top}
+.dblt tr:nth-child(odd) td{background:#fafbfc}
 .subbar{display:flex;gap:8px;overflow-x:auto;margin:0 0 12px;padding-bottom:2px}
 .subchip{flex:0 0 auto;border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 13px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap}
 .subchip.active{background:#ea580c;border-color:#ea580c;color:#fff}
@@ -290,6 +300,7 @@ hr.s{border:0;border-top:1px solid var(--line);margin:16px 0}
 <div class="lb" id="lb"><span class="x" id="lbX">×</span><img id="lbImg" src="" alt=""></div>
 <input type="file" id="imgIn" accept="image/*" multiple style="display:none">
 <input type="file" id="fileIn" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" multiple style="display:none">
+<input type="file" id="csvIn" accept=".csv,text/csv" style="display:none">
 
 <script>
 /* Login laeuft ueber Supabase Auth (Authentication > Users) */
@@ -578,7 +589,7 @@ function matches(a,q){
   var terms=q.toLowerCase().split(/\s+/).filter(Boolean);
   var mhay=(a.type==="maschine")?[a.modell,a.fahrgestellnr,a.baujahr,a.kunde,a.ausstattung,
       (a.komponenten||[]).map(function(k){return (k.bez||"")+" "+(k.sn||"");}).join(" "),
-      (a.reparaturen||[]).map(function(r){return r.text||"";}).join(" ")].join(" "):"";
+      (a.reparaturen||[]).map(function(r){return r.text||"";}).join(" "),dblText(a)].join(" "):"";
   var hay=[a.title,a.body,a.sym,a.urs,a.los,(a.tags||[]).join(" "),a.cat,a.modell,a.dokart,mhay,typeOf(a.type).label].join(" ").toLowerCase();
   return terms.every(function(t){return hay.indexOf(t)>=0;});
 }
@@ -655,6 +666,12 @@ function openDetail(id){
       '<div class="muted2" style="margin-bottom:8px">'+esc(t("qr_hint"))+'</div>'+
       '<button class="btn ghost" id="qrBtn"><svg viewBox="0 0 24 24"><path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3z"/><path d="M14 14h3v3h-3zM18 18h3v3h-3z"/></svg>'+esc(t("btn_show_qr"))+'</button>'+
       '<div id="qrBox" class="qrbox hidden"></div></div>';
+    (a.dbl||[]).forEach(function(d){
+      body+='<details class="dblsec"><summary>'+esc(d.n)+' <span class="dbc">'+((d.r||[]).length)+'</span></summary>'+
+        '<div class="dblwrap"><table class="dblt"><tbody>'+
+        (d.r||[]).map(function(rw){return '<tr>'+rw.map(function(c){return '<td>'+esc(c||"")+'</td>';}).join("")+'</tr>';}).join("")+
+        '</tbody></table></div></details>';
+    });
   } else if(a.type==="handbuch"){
     var dd=[];
     if(a.modell)dd.push([t("l_model"),a.modell]);
@@ -696,12 +713,48 @@ function openDetail(id){
   };
 }
 
+/* ===================== CSV-Import (Datenblätter) ===================== */
+function parseCSV(text){
+  text=String(text||"").replace(/^﻿/,"");
+  var rows=[],row=[],cur="",i=0,inq=false,ch;
+  while(i<text.length){ch=text[i];
+    if(inq){if(ch==='"'){if(text[i+1]==='"'){cur+='"';i+=2;continue;}inq=false;i++;continue;}cur+=ch;i++;continue;}
+    if(ch==='"'){inq=true;i++;continue;}
+    if(ch===';'){row.push(cur);cur="";i++;continue;}
+    if(ch==='\r'){i++;continue;}
+    if(ch==='\n'){row.push(cur);rows.push(row);row=[];cur="";i++;continue;}
+    cur+=ch;i++;}
+  if(cur!==""||row.length){row.push(cur);rows.push(row);}
+  return rows;
+}
+function dblFromCsv(text){
+  var rows=parseCSV(text);if(!rows.length)return {dbl:[],raw:{}};
+  var head=rows[0].map(function(s){return (s||"").trim();});
+  var bi=head.indexOf("Blatt"),zi=head.indexOf("Zeile");
+  if(bi<0){bi=0;zi=1;}
+  var start=(zi>=0?zi:bi)+1,order=[],map={},raw={};
+  for(var r=1;r<rows.length;r++){
+    var rw=rows[r],blatt=((rw[bi]||"")+"").trim();if(!blatt)continue;
+    var cells=rw.slice(start);while(cells.length&&!((cells[cells.length-1]||"")+"").trim())cells.pop();
+    if(!map[blatt]){map[blatt]=[];order.push(blatt);raw[blatt]={};}
+    if(cells.some(function(c){return ((c||"")+"").trim();}))map[blatt].push(cells);
+    var z=parseInt(rw[zi],10);if(!isNaN(z))raw[blatt][z]=rw.slice(start);
+  }
+  return {dbl:order.map(function(b){return {n:b,r:map[b]};}),raw:raw};
+}
+function stammFromRaw(raw){
+  var key=Object.keys(raw).filter(function(k){return /^Maschine/i.test(k);})[0];if(!key)return {};
+  var s=raw[key];function c(z,col){return ((s[z]&&s[z][col-1])||"").toString().trim();}
+  return {modell:c(17,6),fahrgestellnr:c(2,4),baujahr:c(18,6),nr:c(1,3)};
+}
+function dblText(a){return (a.dbl||[]).map(function(d){return d.n+" "+(d.r||[]).map(function(r){return r.join(" ");}).join(" ");}).join(" ");}
+
 /* ===================== Editor ===================== */
 var EDIT=null;        // aktuell bearbeiteter Artikel (Arbeitskopie)
 function openEditor(id,presetType){
   if(id&&DB.arts[id]){EDIT=JSON.parse(JSON.stringify(DB.arts[id]));}
   else {EDIT={id:uid(),type:presetType||FILTER||"stoerung",title:"",body:"",sym:"",urs:"",los:"",cat:"",tags:[],images:[],files:[],
-    modell:"",fahrgestellnr:"",baujahr:"",kunde:"",tuevBis:"",ausstattung:"",komponenten:[],reparaturen:[],termine:[],links:[],dokart:""};}
+    modell:"",fahrgestellnr:"",baujahr:"",kunde:"",tuevBis:"",ausstattung:"",komponenten:[],reparaturen:[],termine:[],links:[],dokart:"",dbl:[]};}
   drawEditor();showView("viewEdit");
 }
 function drawEditor(){
@@ -731,6 +784,10 @@ function drawEditor(){
          if(!av.length)return '<div class="muted2">Noch keine Artikel zum Verknüpfen vorhanden.</div>';
          return av.map(function(x){var on=ls.indexOf(x.id)>=0;return '<label class="lkrow"><input type="checkbox" class="lkchk" value="'+esc(x.id)+'"'+(on?" checked":"")+'><span class="dot" style="background:'+typeOf(x.type).col+'"></span><span class="lktt">'+esc(x.title||"(ohne Titel)")+'</span></label>';}).join("");})()+
       '</div></div>'+
+      '<div class="fg"><label>Datenblätter (technische Daten)</label>'+
+        '<div id="dblList">'+(a.dbl||[]).map(function(d,i){return '<div class="fileitem"><span class="fnm">'+esc(d.n)+'</span><span class="fsz">'+((d.r||[]).length)+' Z.</span><span class="x" data-dbi="'+i+'">×</span></div>';}).join("")+'</div>'+
+        (isAdmin()?'<button class="btn ghost" id="impCsv" type="button"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>CSV importieren</button><div class="muted2" style="margin-top:4px">Geprüfte Komplett-CSV laden – je Excel-Blatt eine Tabelle.</div>':'<div class="muted2">Import nur als Admin</div>')+
+      '</div>'+
       '<div class="note" style="margin-top:2px">'+esc(t("note_machine_files"))+'</div>';
   } else if(a.type==="handbuch"){
     var dpick=DOKARTEN.map(function(d){return '<div class="typepick'+(a.dokart===d?" active":"")+'" data-d="'+esc(d)+'">'+esc(d)+'</div>';}).join("");
@@ -775,6 +832,9 @@ function drawEditor(){
   for(var n=0;n<rrm.length;n++)rrm[n].onclick=function(){var idx=+this.getAttribute("data-r");collectEditor();EDIT.reparaturen.splice(idx,1);drawEditor();};
   var trm=$("viewEdit").querySelectorAll("#termList .xrm");
   for(var p=0;p<trm.length;p++)trm[p].onclick=function(){var idx=+this.getAttribute("data-tm");collectEditor();EDIT.termine.splice(idx,1);drawEditor();};
+  if($("impCsv"))$("impCsv").onclick=function(){$("csvIn").click();};
+  var dbx=$("viewEdit").querySelectorAll("#dblList .x");
+  for(var db=0;db<dbx.length;db++)dbx[db].onclick=function(){var idx=+this.getAttribute("data-dbi");collectEditor();(EDIT.dbl=EDIT.dbl||[]).splice(idx,1);drawEditor();};
   $("saveBtn").onclick=function(){
     collectEditor();
     if(!EDIT.title.trim()){toast(t("need_title"));return;}
@@ -852,6 +912,27 @@ $("fileIn").onchange=function(){
     });
   });
 };
+$("csvIn").onchange=function(){
+  var f=this.files&&this.files[0];this.value="";
+  if(!f||!EDIT)return;
+  var rd=new FileReader();
+  rd.onload=function(){
+    try{
+      var res=dblFromCsv(rd.result);
+      if(!res.dbl.length){toast("CSV leer oder nicht erkannt");return;}
+      collectEditor();
+      EDIT.dbl=res.dbl;
+      var st=stammFromRaw(res.raw);
+      if(!EDIT.modell&&st.modell)EDIT.modell=st.modell;
+      if(!EDIT.fahrgestellnr&&st.fahrgestellnr)EDIT.fahrgestellnr=st.fahrgestellnr;
+      if(!EDIT.baujahr&&st.baujahr)EDIT.baujahr=st.baujahr;
+      if(!EDIT.title&&(st.modell||st.nr))EDIT.title=((st.modell||"Lepton 5100")+" "+(st.nr||"")).trim();
+      drawEditor();toast(res.dbl.length+" Datenblätter importiert");
+    }catch(e){toast("CSV-Fehler: "+(e&&e.message||e));}
+  };
+  rd.onerror=function(){toast("Datei konnte nicht gelesen werden");};
+  rd.readAsText(f);
+};
 
 /* ===================== Einstellungen ===================== */
 function openSettings(){
@@ -875,7 +956,7 @@ function openSettings(){
     '</details>'):'')+
     '<hr class="s">'+
     '<button class="btn danger block" id="logoutBtn">'+esc(t("logout"))+'</button>'+
-    '<div style="text-align:center;color:#aab;font-size:11px;margin-top:14px">Alzipedia '+"v16"+(isAdmin()?" · Admin":"")+'</div>'+
+    '<div style="text-align:center;color:#aab;font-size:11px;margin-top:14px">Alzipedia '+"v17"+(isAdmin()?" · Admin":"")+'</div>'+
     '</div>';
   $("viewSet").innerHTML=h;showView("viewSet");setConn(sbReady()?(navigator.onLine?"ok":"off"):"");
   $("setBack").onclick=function(){showView("viewList");};
