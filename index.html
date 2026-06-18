@@ -218,6 +218,12 @@ textarea.field{min-height:120px;resize:vertical;line-height:1.5}
 .chiprow{display:flex;flex-wrap:wrap;gap:8px}
 .chip{border:1px solid var(--red);background:#fff;color:var(--red);border-radius:999px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap}
 .chip:active{transform:scale(.97)}
+.teachbtn{align-self:flex-start;margin-top:6px;display:inline-flex;align-items:center;gap:6px;border:1px dashed var(--muted);background:#fff;color:var(--muted);border-radius:999px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer}
+.teachbtn svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.teachbtn:active{transform:scale(.97)}
+.teachcard{align-self:stretch;background:#fff;border:1px solid var(--red);border-radius:14px;padding:13px;margin-top:6px}
+.teachcard .tlb{display:block;font-size:12px;font-weight:800;color:var(--muted);margin:8px 0 4px}
+.teachcard textarea{min-height:64px}
 .cbub{max-width:92%;border-radius:14px;padding:11px 13px;font-size:14px;line-height:1.5;white-space:pre-wrap;word-break:break-word}
 .cbub.user{align-self:flex-end;background:var(--red);color:#fff;border-bottom-right-radius:4px}
 .cbub.bot{align-self:flex-start;background:#f1f3f6;color:var(--ink);border-bottom-left-radius:4px}
@@ -355,6 +361,7 @@ hr.s{border:0;border-top:1px solid var(--line);margin:16px 0}
 <input type="file" id="imgIn" accept="image/*" multiple style="display:none">
 <input type="file" id="fileIn" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" multiple style="display:none">
 <input type="file" id="csvIn" accept=".csv,text/csv" style="display:none">
+<input type="file" id="wissenIn" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" multiple style="display:none">
 
 <script>
 /* Login laeuft ueber Supabase Auth (Authentication > Users) */
@@ -409,6 +416,20 @@ var I18N5={
  fr:{ki_on:"IA : on",ki_off:"IA : off",ki_think:"L'IA réfléchit …",ki_hint:"Mode IA : vraie IA (Opus 4.8) raisonne et pose des questions – quelques centimes par question.",ki_err:"IA injoignable. La fonction 'alzi-ki' est-elle déployée et la clé API définie ?"}
 };
 for(var _l5 in I18N5){for(var _k5 in I18N5[_l5])I18N[_l5][_k5]=I18N5[_l5][_k5];}
+var I18N6={
+ de:{ablage_title:"Wissensablage für Alzi (KI)",ablage_up:"Dokument hochladen",ablage_hint:"Hier alle wichtigen Unterlagen / Betriebsanleitungen ablegen – Alzi durchsucht sie automatisch (auch den PDF-Inhalt)."},
+ en:{ablage_title:"Knowledge files for Alzi (AI)",ablage_up:"Upload document",ablage_hint:"Add all important manuals/docs here – Alzi searches them automatically (incl. PDF content)."},
+ pl:{ablage_title:"Baza wiedzy dla Alzi (AI)",ablage_up:"Wgraj dokument",ablage_hint:"Dodaj tu wszystkie ważne instrukcje – Alzi automatycznie je przeszukuje (także treść PDF)."},
+ fr:{ablage_title:"Base de connaissances pour Alzi (IA)",ablage_up:"Téléverser un document",ablage_hint:"Déposez ici tous les manuels importants – Alzi les consulte automatiquement (contenu PDF inclus)."}
+};
+for(var _l6 in I18N6){for(var _k6 in I18N6[_l6])I18N[_l6][_k6]=I18N6[_l6][_k6];}
+var I18N7={
+ de:{train_title:"Alzi-Training (Frage & Antwort)",train_hint:"Hier bringst du Alzi verbindliche Antworten bei. Du kennst die Maschine – diese Antworten nutzt Alzi mit höchster Priorität.",train_add:"Neue Frage & Antwort",train_q:"Frage",train_a:"Antwort (verbindlich)",train_save:"Alzi beibringen",train_update:"Antwort aktualisieren",train_saved:"Gelernt – Alzi nutzt diese Antwort jetzt.",train_none:"Noch keine Trainings-Antworten. Lege die erste an.",train_badge:"Geprüfte Antwort",teach:"Alzi beibringen",teach_q_ph:"Frage (worauf bezieht sich die Antwort?)",teach_a_ph:"So lautet die richtige Antwort …"},
+ en:{train_title:"Alzi training (Q & A)",train_hint:"Teach Alzi binding answers here. You know the machine – Alzi uses these answers with top priority.",train_add:"New question & answer",train_q:"Question",train_a:"Answer (binding)",train_save:"Teach Alzi",train_update:"Update answer",train_saved:"Learned – Alzi uses this answer now.",train_none:"No training answers yet. Add the first one.",train_badge:"Verified answer",teach:"Teach Alzi",teach_q_ph:"Question (what does the answer refer to?)",teach_a_ph:"This is the correct answer …"},
+ pl:{train_title:"Trening Alzi (pytanie i odpowiedź)",train_hint:"Tu uczysz Alzi wiążących odpowiedzi. Znasz maszynę – Alzi używa ich z najwyższym priorytetem.",train_add:"Nowe pytanie i odpowiedź",train_q:"Pytanie",train_a:"Odpowiedź (wiążąca)",train_save:"Naucz Alzi",train_update:"Zaktualizuj odpowiedź",train_saved:"Nauczone – Alzi używa teraz tej odpowiedzi.",train_none:"Brak odpowiedzi treningowych. Dodaj pierwszą.",train_badge:"Sprawdzona odpowiedź",teach:"Naucz Alzi",teach_q_ph:"Pytanie (czego dotyczy odpowiedź?)",teach_a_ph:"To jest poprawna odpowiedź …"},
+ fr:{train_title:"Entraînement d'Alzi (Q & R)",train_hint:"Apprenez ici à Alzi des réponses fiables. Vous connaissez la machine – Alzi les utilise en priorité.",train_add:"Nouvelle question & réponse",train_q:"Question",train_a:"Réponse (fiable)",train_save:"Apprendre à Alzi",train_update:"Mettre à jour",train_saved:"Appris – Alzi utilise cette réponse.",train_none:"Aucune réponse d'entraînement. Ajoutez la première.",train_badge:"Réponse vérifiée",teach:"Apprendre à Alzi",teach_q_ph:"Question (à quoi se rapporte la réponse ?)",teach_a_ph:"Voici la bonne réponse …"}
+};
+for(var _l7 in I18N7){for(var _k7 in I18N7[_l7])I18N[_l7][_k7]=I18N7[_l7][_k7];}
 var LANG=lsGet(LS_LANG,"de");if(!I18N[LANG])LANG="de";
 function t(k,vars){var s=(I18N[LANG]&&I18N[LANG][k])||I18N.de[k]||k;if(vars)for(var v in vars)s=s.replace("{"+v+"}",vars[v]);return s;}
 function typeLabel(tp){var k="t_"+(tp&&tp.id?tp.id:tp);return (I18N[LANG]&&I18N[LANG][k])||(tp&&tp.label)||k;}
@@ -569,6 +590,16 @@ function saveArticle(art){
   if(sbReady()){sbUpsert(art).then(function(){setConn("ok");}).catch(function(){queuePush({op:"up",id:art.id,art:art});setConn("off");});}
   else queuePush({op:"up",id:art.id,art:art});
 }
+function trainDocs(){return artsArr().filter(function(a){return a.train;}).sort(function(x,y){return (y.updated||"").localeCompare(x.updated||"");});}
+function saveTraining(frage,antwort,id){
+  frage=(frage||"").trim();antwort=(antwort||"").trim();
+  if(!frage||!antwort)return false;
+  var art;
+  if(id&&DB.arts[id]){art=JSON.parse(JSON.stringify(DB.arts[id]));}
+  else{art={id:uid(),type:"faq",tags:[],images:[],files:[],komponenten:[],reparaturen:[],termine:[],links:[],dbl:[]};}
+  art.train=true;art.title=frage;art.body=antwort;art.sym="";art.urs="";art.los="";art.cat="";
+  saveArticle(art);return true;
+}
 function deleteArticle(id){
   var art=DB.arts[id];if(!art)return;
   art.deleted=true;art.updated=nowISO();DB.arts[id]=art;saveLocal();
@@ -716,6 +747,7 @@ var CHAT=lsGet(LS_CHAT,[]);
 var LS_KIMODE="alzipedia_kimode";
 var KIMODE=lsGet(LS_KIMODE,false);
 var KIMODEL="claude-opus-4-8";
+var TEACH=null; // {q:Frage, a:Antwort} – aktive Lern-Karte im Chat
 var STOP={der:1,die:1,das:1,und:1,oder:1,ist:1,im:1,am:1,ein:1,eine:1,ich:1,es:1,an:1,auf:1,zu:1,mit:1,von:1,"für":1,nicht:1,mehr:1,was:1,wie:1,den:1,dem:1,er:1,sie:1,bei:1,the:1,a:1,to:1,of:1,is:1,my:1};
 var SYNG=[
  ["dreht","drehen","läuft","laufen","geht","funktioniert","arbeitet","startet","rotiert","bewegt"],
@@ -747,6 +779,7 @@ function assistRank(q){
   var out=artsArr().map(function(a){
     var f=aFields(a),s=0;
     terms.forEach(function(w){if(aHit(f.hi,w))s+=5;if(aHit(f.md,w))s+=2;if(aHit(f.lo,w))s+=1;});
+    if(s>0&&a.train)s+=6; // vom Experten geprüfte Antworten haben Vorrang
     return {a:a,s:s};
   }).filter(function(x){return x.s>0;});
   out.sort(function(x,y){return y.s-x.s||(y.a.updated||"").localeCompare(x.a.updated||"");});
@@ -758,21 +791,30 @@ function assistAnswer(a){
 }
 function fmtTime(ts){if(!ts)return "";var d=new Date(ts);if(isNaN(d))return "";return d.toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"});}
 function botHead(m){return '<div class="bname"><span class="bav">A</span>Alzi'+((m&&m.ts)?' <span class="bts">· '+esc(fmtTime(m.ts))+'</span>':'')+'</div>';}
+function prevQuestion(idx){for(var i=idx-1;i>=0;i--){if(CHAT[i].role==="user")return CHAT[i].text||"";}return "";}
 function chatBubbles(){
-  return CHAT.map(function(m){
+  return CHAT.map(function(m,idx){
     if(m.role==="user")return '<div class="cbub user">'+esc(m.text)+'</div>';
-    var inner;
+    var inner,teachable=false;
     if(m.thinking)inner='<div class="cbub bot"><span class="typing"><i></i><i></i><i></i></span></div>';
-    else if(m.text)inner='<div class="cbub bot rich'+(m.err?" err":"")+'">'+renderText(m.text)+'</div>'+chipRow(m.chips);
-    else if(m.none)inner='<div class="cbub bot">'+esc(t("a_none"))+'</div>';
+    else if(m.text){inner='<div class="cbub bot rich'+(m.err?" err":"")+'">'+renderText(m.text)+'</div>'+chipRow(m.chips);teachable=!m.err;}
+    else if(m.none){inner='<div class="cbub bot">'+esc(t("a_none"))+'</div>';teachable=true;}
     else{var head=t("a_found");var cards=(m.items||[]).map(function(id){var a=DB.arts[id];if(!a)return "";var tp=typeOf(a.type);
-      return '<div class="cres" data-go="'+esc(id)+'"><span class="badge" style="background:'+tp.col+'">'+esc(typeLabel(tp))+'</span>'+
+      return '<div class="cres" data-go="'+esc(id)+'"><span class="badge" style="background:'+tp.col+'">'+esc(a.train?t("train_badge"):typeLabel(tp))+'</span>'+
         '<div class="crt">'+esc(a.title||"(ohne Titel)")+'</div>'+
         '<div class="cra">'+esc((assistAnswer(a)||"").slice(0,300))+'</div>'+
         '<div class="cro">'+esc(t("a_open"))+' ›</div></div>';}).join("");
-      inner='<div class="cbub bot"><div class="bhd">'+esc(head)+'</div>'+cards+'</div>';}
-    return '<div class="cwrap bot">'+botHead(m)+inner+'</div>';
+      inner='<div class="cbub bot"><div class="bhd">'+esc(head)+'</div>'+cards+'</div>';teachable=true;}
+    var teach=(teachable&&isAdmin()&&!m.thinking)?'<button class="teachbtn" type="button" data-teach="'+esc(prevQuestion(idx))+'"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>'+esc(t("teach"))+'</button>':"";
+    return '<div class="cwrap bot">'+botHead(m)+inner+teach+'</div>';
   }).join("");
+}
+function teachCard(){
+  if(!TEACH)return "";
+  return '<div class="teachcard"><div class="bhd">'+esc(t("train_save"))+'</div>'+
+    '<label class="tlb">'+esc(t("train_q"))+'</label><textarea class="field" id="teachQ" placeholder="'+esc(t("teach_q_ph"))+'">'+esc(TEACH.q||"")+'</textarea>'+
+    '<label class="tlb">'+esc(t("train_a"))+'</label><textarea class="field" id="teachA" placeholder="'+esc(t("teach_a_ph"))+'">'+esc(TEACH.a||"")+'</textarea>'+
+    '<div class="row" style="margin-top:8px"><button class="btn primary" id="teachSave">'+esc(t("train_save"))+'</button><button class="btn ghost" id="teachCancel">'+esc(t("cancel"))+'</button></div></div>';
 }
 var ASK_EX=["Fehler 123 am Display","Siebdeck 1 überlastet – was prüfen?","FU N301 Parameter","Welche TÜV-Termine sind fällig?"];
 function chipRow(chips){if(!chips||!chips.length)return "";return '<div class="chiprow">'+chips.map(function(c){return '<button class="chip" type="button" data-chip="'+esc(c)+'">'+esc(c)+'</button>';}).join("")+'</div>';}
@@ -781,11 +823,19 @@ function chatIntro(){
 }
 function renderChat(){
   var box=$("chatMsgs");if(!box)return;
-  box.innerHTML=CHAT.length?chatBubbles():chatIntro();
+  box.innerHTML=(CHAT.length?chatBubbles():chatIntro())+teachCard();
   var cs=box.querySelectorAll(".cres");
   for(var i=0;i<cs.length;i++)cs[i].onclick=function(){openDetail(this.getAttribute("data-go"));};
   var ch=box.querySelectorAll(".chip");
   for(var j=0;j<ch.length;j++)ch[j].onclick=function(){chatAsk(this.getAttribute("data-chip"));};
+  var tb=box.querySelectorAll(".teachbtn");
+  for(var k=0;k<tb.length;k++)tb[k].onclick=function(){TEACH={q:this.getAttribute("data-teach")||"",a:""};renderChat();var qa=$("teachA");if(qa)qa.focus();};
+  if($("teachCancel"))$("teachCancel").onclick=function(){TEACH=null;renderChat();};
+  if($("teachSave"))$("teachSave").onclick=function(){
+    var fq=($("teachQ").value||"").trim(),fa=($("teachA").value||"").trim();
+    if(!fq||!fa){toast(t("train_q")+" + "+t("train_a")+"?");return;}
+    saveTraining(fq,fa);TEACH=null;toast(t("train_saved"));renderTabs();renderList();renderChat();
+  };
   box.scrollTop=box.scrollHeight;
 }
 function chatAsk(q){
@@ -805,7 +855,9 @@ function chatAsk(q){
   }
 }
 function kiContext(q){
-  return assistRank(q).map(function(x){var a=x.a;var s="### "+typeLabel(typeOf(a.type))+": "+(a.title||"")+"\n";
+  return assistRank(q).map(function(x){var a=x.a;
+    if(a.train){return "### ✅ GEPRÜFTE EXPERTEN-ANTWORT (verbindlich, hat Vorrang)\nFrage: "+(a.title||"")+"\nVerbindliche Antwort: "+(a.body||"")+"\n";}
+    var s="### "+typeLabel(typeOf(a.type))+": "+(a.title||"")+"\n";
     if(a.type==="stoerung"){if(a.sym)s+="Symptom: "+a.sym+"\n";if(a.urs)s+="Ursache: "+a.urs+"\n";if(a.los)s+="Lösung: "+a.los+"\n";}
     else{if(a.modell)s+="Modell: "+a.modell+"\n";if(a.dokart)s+="Dokumentart: "+a.dokart+"\n";if(a.body)s+=a.body+"\n";if(a.ausstattung)s+="Ausstattung: "+a.ausstattung+"\n";}
     var ft=(a.files||[]).map(function(fl){return fl.text||"";}).join(" ").trim();if(ft)s+="Aus Dokument: "+ft.slice(0,2000)+"\n";
@@ -1201,6 +1253,69 @@ $("csvIn").onchange=function(){
   rd.readAsText(f);
 };
 
+/* ---- Wissensablage: hochgeladene Unterlagen werden zu Handbuch-Einträgen (mit PDF-Volltext für Alzi/KI) ---- */
+$("wissenIn").onchange=function(){
+  var files=Array.prototype.slice.call(this.files||[]);this.value="";
+  if(!files.length)return;
+  if(!sbReady()){toast("Dateien benötigen eine Cloud-Verbindung");return;}
+  toast(files.some(isPdf)?"PDF wird gelesen & hochgeladen …":(files.length>1?"Dateien werden hochgeladen …":"Datei wird hochgeladen …"));
+  var done=0,ok=0,withText=0;
+  files.forEach(function(f){
+    extractPdfText(f).then(function(txt){
+      return sbUploadFile(f).then(function(url){
+        var name=f.name||"Dokument";
+        var art={id:uid(),type:"handbuch",title:name.replace(/\.[^.]+$/,""),body:"",sym:"",urs:"",los:"",cat:"",tags:[],images:[],
+          files:[{name:name,url:url,type:f.type||"",size:f.size||0,text:txt||""}],
+          modell:"",fahrgestellnr:"",baujahr:"",kunde:"",tuevBis:"",auslieferung:"",ausstattung:"",komponenten:[],reparaturen:[],termine:[],links:[],dokart:"",dbl:[]};
+        saveArticle(art);ok++;if(txt)withText++;done++;
+        if(done===files.length){if($("wissenList"))$("wissenList").innerHTML=wissenRows();renderTabs();renderList();toast(ok+" Datei(en) hinzugefügt"+(withText?" · "+withText+"× PDF-Text gelesen":""));}
+      });
+    }).catch(function(){done++;
+      if(done===files.length){if($("wissenList"))$("wissenList").innerHTML=wissenRows();toast(ok?ok+" Datei(en) hinzugefügt":"Upload fehlgeschlagen");}
+    });
+  });
+};
+function wissenDocs(){return artsArr().filter(function(a){return a.type==="handbuch"&&(a.files||[]).length;}).sort(function(x,y){return (y.updated||"").localeCompare(x.updated||"");});}
+function wissenRows(){
+  var docs=wissenDocs();
+  if(!docs.length)return '<div class="note" style="margin-top:8px">'+esc(t("ablage_hint"))+'</div>';
+  return docs.map(function(a){
+    var f=(a.files||[])[0]||{};
+    var hasText=f.text?' · <span style="color:#16a34a">PDF-Text ✓</span>':'';
+    return '<div class="setrow" style="align-items:center"><span class="l" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">'+esc(a.title||f.name||"Dokument")+hasText+'</span>'+
+      '<button class="btn ghost" data-wopen="'+esc(a.id)+'" style="padding:6px 10px;font-size:12px">'+esc(t("a_open"))+'</button>'+
+      '<button class="btn ghost" data-wdel="'+esc(a.id)+'" style="padding:6px 10px;font-size:12px;color:#dc2626">×</button></div>';
+  }).join("");
+}
+function bindWissen(){
+  if($("wissenUp"))$("wissenUp").onclick=function(){$("wissenIn").click();};
+  var list=$("wissenList");if(!list)return;
+  list.querySelectorAll("[data-wopen]").forEach(function(b){b.onclick=function(){openDetail(this.getAttribute("data-wopen"));};});
+  list.querySelectorAll("[data-wdel]").forEach(function(b){b.onclick=function(){if(!confirm(t("confirm_del")))return;deleteArticle(this.getAttribute("data-wdel"));list.innerHTML=wissenRows();bindWissen();renderTabs();renderList();toast(t("deleted"));};});
+}
+function trainRows(){
+  var docs=trainDocs();
+  if(!docs.length)return '<div class="note" style="margin-top:8px">'+esc(t("train_none"))+'</div>';
+  return docs.map(function(a){
+    return '<div class="setrow" style="align-items:flex-start"><span class="l" style="flex:1;white-space:normal">'+
+      '<b>'+esc(a.title||"")+'</b><br><span style="color:var(--muted)">'+esc((a.body||"").slice(0,140))+((a.body||"").length>140?"…":"")+'</span></span>'+
+      '<button class="btn ghost" data-topen="'+esc(a.id)+'" style="padding:6px 10px;font-size:12px">'+esc(t("a_open"))+'</button>'+
+      '<button class="btn ghost" data-tdel="'+esc(a.id)+'" style="padding:6px 10px;font-size:12px;color:#dc2626">×</button></div>';
+  }).join("");
+}
+function bindTraining(){
+  if($("trainAdd"))$("trainAdd").onclick=function(){var f=$("trainForm");if(f)f.style.display=(f.style.display==="none"?"block":"none");if(f&&f.style.display==="block"&&$("trainQ"))$("trainQ").focus();};
+  if($("trainSave"))$("trainSave").onclick=function(){
+    var fq=($("trainQ").value||"").trim(),fa=($("trainA").value||"").trim();
+    if(!fq||!fa){toast(t("train_q")+" + "+t("train_a")+"?");return;}
+    if(saveTraining(fq,fa)){$("trainQ").value="";$("trainA").value="";if($("trainForm"))$("trainForm").style.display="none";
+      if($("trainList"))$("trainList").innerHTML=trainRows();bindTraining();renderTabs();renderList();toast(t("train_saved"));}
+  };
+  var list=$("trainList");if(!list)return;
+  list.querySelectorAll("[data-topen]").forEach(function(b){b.onclick=function(){openDetail(this.getAttribute("data-topen"));};});
+  list.querySelectorAll("[data-tdel]").forEach(function(b){b.onclick=function(){if(!confirm(t("confirm_del")))return;deleteArticle(this.getAttribute("data-tdel"));list.innerHTML=trainRows();bindTraining();renderTabs();renderList();toast(t("deleted"));};});
+}
+
 /* ===================== Einstellungen ===================== */
 function openSettings(){
   var langBtns=LANGS.map(function(l){return '<button class="langbtn'+(LANG===l.id?" active":"")+'" data-l="'+l.id+'">'+esc(l.label)+'</button>';}).join("");
@@ -1220,10 +1335,22 @@ function openSettings(){
     '<div style="font-size:13px;line-height:1.6;margin-top:8px">1. Auf <b>supabase.com</b> ein Projekt anlegen (Region Frankfurt/EU).<br>2. Im <b>SQL Editor</b> dies ausführen:</div>'+
     '<div class="code">'+esc(SETUP_SQL)+'</div>'+
     '<div style="font-size:13px;line-height:1.6">3. <b>Authentication → Users → Add user</b>: für jeden Techniker E-Mail + Passwort anlegen (Häkchen „Auto Confirm User").<br>4. Unter <b>Project Settings → API</b> die <b>Project URL</b> und den <b>Publishable key</b> (sb_publishable_…) kopieren und oben eintragen → <b>Verbinden</b>.</div>'+
-    '</details>'):'')+
+    '</details>'+
+    '<h4 style="margin:18px 0 6px">'+esc(t("ablage_title"))+'</h4>'+
+    '<div class="note">'+esc(t("ablage_hint"))+'</div>'+
+    '<button class="btn primary" id="wissenUp" style="margin-top:8px"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>'+esc(t("ablage_up"))+'</button>'+
+    '<div id="wissenList" style="margin-top:10px">'+wissenRows()+'</div>'+
+    '<h4 style="margin:18px 0 6px">'+esc(t("train_title"))+'</h4>'+
+    '<div class="note">'+esc(t("train_hint"))+'</div>'+
+    '<button class="btn primary" id="trainAdd" style="margin-top:8px"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>'+esc(t("train_add"))+'</button>'+
+    '<div id="trainForm" style="display:none;margin-top:10px">'+
+      '<div class="fg"><label>'+esc(t("train_q"))+'</label><textarea class="field" id="trainQ" placeholder="'+esc(t("teach_q_ph"))+'"></textarea></div>'+
+      '<div class="fg"><label>'+esc(t("train_a"))+'</label><textarea class="field" id="trainA" placeholder="'+esc(t("teach_a_ph"))+'"></textarea></div>'+
+      '<button class="btn primary" id="trainSave">'+esc(t("train_save"))+'</button></div>'+
+    '<div id="trainList" style="margin-top:10px">'+trainRows()+'</div>'):'')+
     '<hr class="s">'+
     '<button class="btn danger block" id="logoutBtn">'+esc(t("logout"))+'</button>'+
-    '<div style="text-align:center;color:#aab;font-size:11px;margin-top:14px">Alzipedia '+"v27"+(isAdmin()?" · Admin":"")+'</div>'+
+    '<div style="text-align:center;color:#aab;font-size:11px;margin-top:14px">Alzipedia '+"v29"+(isAdmin()?" · Admin":"")+'</div>'+
     '</div>';
   $("viewSet").innerHTML=h;showView("viewSet");setConn(sbReady()?(navigator.onLine?"ok":"off"):"");
   $("setBack").onclick=function(){showView("viewList");};
@@ -1236,6 +1363,7 @@ function openSettings(){
   };
   if($("sbClear"))$("sbClear").onclick=function(){if(!confirm("Verbindung trennen und abmelden?"))return;authForceLogout();SB={url:"",key:""};lsSet(LS_SB,SB);location.reload();};
   $("logoutBtn").onclick=function(){authLogout().then(function(){location.reload();});};
+  bindWissen();bindTraining();
 }
 
 /* ===================== Lightbox ===================== */
