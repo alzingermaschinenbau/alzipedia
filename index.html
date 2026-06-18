@@ -7,6 +7,7 @@
 <meta name="theme-color" content="#c00000">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Alzipedia">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -1437,7 +1438,7 @@ function openSettings(){
     '<div id="trainList" style="margin-top:10px">'+trainRows()+'</div>'):'')+
     '<hr class="s">'+
     '<button class="btn danger block" id="logoutBtn">'+esc(t("logout"))+'</button>'+
-    '<div style="text-align:center;color:#aab;font-size:11px;margin-top:14px">Alzipedia '+"v31"+(isAdmin()?" · Admin":"")+'</div>'+
+    '<div style="text-align:center;color:#aab;font-size:11px;margin-top:14px">Alzipedia '+"v32"+(isAdmin()?" · Admin":"")+'</div>'+
     '</div>';
   $("viewSet").innerHTML=h;showView("viewSet");setConn(sbReady()?(navigator.onLine?"ok":"off"):"");
   $("setBack").onclick=function(){showView("viewList");};
