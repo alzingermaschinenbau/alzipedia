@@ -203,6 +203,15 @@ textarea.field{min-height:120px;resize:vertical;line-height:1.5}
 @keyframes tdot{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:.9;transform:translateY(-3px)}}
 .chatmsgs{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:4px 0 12px;min-height:50vh}
 .cintro{color:var(--muted);font-size:14px;text-align:center;padding:24px 10px}
+.cwrap{display:flex;flex-direction:column;align-items:flex-start;gap:7px;max-width:92%;align-self:flex-start}
+.cbub.rich{white-space:normal}
+.cbub.rich div{margin:2px 0}.cbub.rich h4{margin:8px 0 3px;font-size:14px}
+.cbub.rich ul{margin:4px 0 4px 18px;padding:0}.cbub.rich li{margin:2px 0}
+.cbub.rich strong{font-weight:800}
+.kidisc{margin-top:8px;font-size:11px;color:var(--muted)}
+.chiprow{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--red);background:#fff;color:var(--red);border-radius:999px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap}
+.chip:active{transform:scale(.97)}
 .cbub{max-width:92%;border-radius:14px;padding:11px 13px;font-size:14px;line-height:1.5;white-space:pre-wrap;word-break:break-word}
 .cbub.user{align-self:flex-end;background:var(--red);color:#fff;border-bottom-right-radius:4px}
 .cbub.bot{align-self:flex-start;background:#f1f3f6;color:var(--ink);border-bottom-left-radius:4px}
@@ -381,10 +390,10 @@ var I18N3={
 };
 for(var _l3 in I18N3){for(var _k3 in I18N3[_l3])I18N[_l3][_k3]=I18N3[_l3][_k3];}
 var I18N4={
- de:{a_title:"Assistent",a_ph:"Frage stellen … (z. B. Fehler 123, Siebdeck Motor dreht nicht)",a_intro:"Stell eine Frage – ich suche die Antwort in eurem Alzipedia-Wissen (Störungen, Anleitungen, FAQ, Maschinen).",a_none:"Dazu habe ich nichts gefunden. Lege am besten einen Eintrag dafür an (z. B. unter Störungssuche).",a_found:"Das passt am ehesten:",a_clear:"Verlauf leeren",a_open:"Öffnen",a_send:"Senden"},
- en:{a_title:"Assistant",a_ph:"Ask a question … (e.g. error 123, screen motor not turning)",a_intro:"Ask a question – I search the answer in your Alzipedia knowledge (faults, guides, FAQ, machines).",a_none:"I found nothing for that. Best create an entry for it (e.g. under Troubleshooting).",a_found:"Best matches:",a_clear:"Clear chat",a_open:"Open",a_send:"Send"},
- pl:{a_title:"Asystent",a_ph:"Zadaj pytanie … (np. błąd 123, silnik sita nie kręci)",a_intro:"Zadaj pytanie – szukam odpowiedzi w Twojej wiedzy Alzipedia (usterki, instrukcje, FAQ, maszyny).",a_none:"Nic nie znalazłem. Najlepiej dodaj wpis (np. w Wyszukiwaniu usterek).",a_found:"Najlepsze dopasowania:",a_clear:"Wyczyść",a_open:"Otwórz",a_send:"Wyślij"},
- fr:{a_title:"Assistant",a_ph:"Posez une question … (ex. erreur 123, moteur de crible ne tourne pas)",a_intro:"Posez une question – je cherche la réponse dans votre savoir Alzipedia (pannes, guides, FAQ, machines).",a_none:"Je n'ai rien trouvé. Créez plutôt une entrée (ex. dans Dépannage).",a_found:"Meilleures correspondances :",a_clear:"Effacer",a_open:"Ouvrir",a_send:"Envoyer"}
+ de:{a_title:"Assistent",a_ph:"Frage stellen … (z. B. Fehler 123, Siebdeck Motor dreht nicht)",a_intro:"Stell eine Frage – ich suche die Antwort in eurem Alzipedia-Wissen (Störungen, Anleitungen, FAQ, Maschinen).",a_none:"Dazu habe ich nichts gefunden. Lege am besten einen Eintrag dafür an (z. B. unter Störungssuche).",a_found:"Das passt am ehesten:",a_clear:"Verlauf leeren",a_open:"Öffnen",a_send:"Senden",a_hello:"Hallo! Wie kann ich dir helfen?"},
+ en:{a_title:"Assistant",a_ph:"Ask a question … (e.g. error 123, screen motor not turning)",a_intro:"Ask a question – I search the answer in your Alzipedia knowledge (faults, guides, FAQ, machines).",a_none:"I found nothing for that. Best create an entry for it (e.g. under Troubleshooting).",a_found:"Best matches:",a_clear:"Clear chat",a_open:"Open",a_send:"Send",a_hello:"Hi! How can I help you?"},
+ pl:{a_title:"Asystent",a_ph:"Zadaj pytanie … (np. błąd 123, silnik sita nie kręci)",a_intro:"Zadaj pytanie – szukam odpowiedzi w Twojej wiedzy Alzipedia (usterki, instrukcje, FAQ, maszyny).",a_none:"Nic nie znalazłem. Najlepiej dodaj wpis (np. w Wyszukiwaniu usterek).",a_found:"Najlepsze dopasowania:",a_clear:"Wyczyść",a_open:"Otwórz",a_send:"Wyślij",a_hello:"Cześć! W czym mogę pomóc?"},
+ fr:{a_title:"Assistant",a_ph:"Posez une question … (ex. erreur 123, moteur de crible ne tourne pas)",a_intro:"Posez une question – je cherche la réponse dans votre savoir Alzipedia (pannes, guides, FAQ, machines).",a_none:"Je n'ai rien trouvé. Créez plutôt une entrée (ex. dans Dépannage).",a_found:"Meilleures correspondances :",a_clear:"Effacer",a_open:"Ouvrir",a_send:"Envoyer",a_hello:"Bonjour ! Comment puis-je aider ?"}
 };
 for(var _l4 in I18N4){for(var _k4 in I18N4[_l4])I18N[_l4][_k4]=I18N4[_l4][_k4];}
 var I18N5={
@@ -745,7 +754,7 @@ function chatBubbles(){
   return CHAT.map(function(m){
     if(m.role==="user")return '<div class="cbub user">'+esc(m.text)+'</div>';
     if(m.thinking)return '<div class="cbub bot"><span class="typing"><i></i><i></i><i></i></span></div>';
-    if(m.text)return '<div class="cbub bot'+(m.err?" err":"")+'">'+esc(m.text)+'</div>';
+    if(m.text)return '<div class="cwrap bot"><div class="cbub bot rich'+(m.err?" err":"")+'">'+renderText(m.text)+'</div>'+chipRow(m.chips)+'</div>';
     if(m.none)return '<div class="cbub bot">'+esc(t("a_none"))+'</div>';
     var head=t("a_found");
     var cards=(m.items||[]).map(function(id){var a=DB.arts[id];if(!a)return "";var tp=typeOf(a.type);
@@ -756,11 +765,18 @@ function chatBubbles(){
     return '<div class="cbub bot"><div class="bhd">'+esc(head)+'</div>'+cards+'</div>';
   }).join("");
 }
+var ASK_EX=["Fehler 123 am Display","Siebdeck 1 überlastet – was prüfen?","FU N301 Parameter","Welche TÜV-Termine sind fällig?"];
+function chipRow(chips){if(!chips||!chips.length)return "";return '<div class="chiprow">'+chips.map(function(c){return '<button class="chip" type="button" data-chip="'+esc(c)+'">'+esc(c)+'</button>';}).join("")+'</div>';}
+function chatIntro(){
+  return '<div class="cwrap bot"><div class="cbub bot rich"><b>'+esc(t("a_hello"))+'</b><br>'+esc(t("a_intro"))+(KIMODE?'<div class="kidisc">Antworten können KI-generiert sein.</div>':'')+'</div>'+chipRow(ASK_EX)+'</div>';
+}
 function renderChat(){
   var box=$("chatMsgs");if(!box)return;
-  box.innerHTML=CHAT.length?chatBubbles():'<div class="cintro">'+esc(t("a_intro"))+'</div>';
+  box.innerHTML=CHAT.length?chatBubbles():chatIntro();
   var cs=box.querySelectorAll(".cres");
   for(var i=0;i<cs.length;i++)cs[i].onclick=function(){openDetail(this.getAttribute("data-go"));};
+  var ch=box.querySelectorAll(".chip");
+  for(var j=0;j<ch.length;j++)ch[j].onclick=function(){chatAsk(this.getAttribute("data-chip"));};
   box.scrollTop=box.scrollHeight;
 }
 function chatAsk(q){
@@ -806,7 +822,9 @@ function kiAnswer(q){
   }).then(function(r){return r.json().catch(function(){return {error:"Antwort unlesbar"};});})
    .then(function(d){
      CHAT=CHAT.filter(function(m){return !m.thinking;});
-     if(d&&d.answer)CHAT.push({role:"bot",text:d.answer});
+     if(d&&d.answer){var ans=d.answer,chips=[];var mm=ans.match(/VORSCHL[ÄA]GE\s*:\s*([^\n]+)\s*$/i);
+       if(mm){chips=mm[1].split("|").map(function(s){return s.trim();}).filter(Boolean).slice(0,4);ans=ans.slice(0,mm.index).trim();}
+       CHAT.push({role:"bot",text:ans,chips:chips});}
      else CHAT.push({role:"bot",text:"⚠️ "+((d&&d.error)?d.error:t("ki_err")),err:true});
      if(CHAT.length>60)CHAT=CHAT.slice(-60);
      lsSet(LS_CHAT,CHAT);renderChat();
@@ -1196,7 +1214,7 @@ function openSettings(){
     '</details>'):'')+
     '<hr class="s">'+
     '<button class="btn danger block" id="logoutBtn">'+esc(t("logout"))+'</button>'+
-    '<div style="text-align:center;color:#aab;font-size:11px;margin-top:14px">Alzipedia '+"v24"+(isAdmin()?" · Admin":"")+'</div>'+
+    '<div style="text-align:center;color:#aab;font-size:11px;margin-top:14px">Alzipedia '+"v25"+(isAdmin()?" · Admin":"")+'</div>'+
     '</div>';
   $("viewSet").innerHTML=h;showView("viewSet");setConn(sbReady()?(navigator.onLine?"ok":"off"):"");
   $("setBack").onclick=function(){showView("viewList");};
