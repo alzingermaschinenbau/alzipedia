@@ -355,6 +355,7 @@ hr.s{border:0;border-top:1px solid var(--line);margin:16px 0}
 <input type="file" id="imgIn" accept="image/*" multiple style="display:none">
 <input type="file" id="fileIn" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" multiple style="display:none">
 <input type="file" id="csvIn" accept=".csv,text/csv" style="display:none">
+<input type="file" id="wissenIn" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" multiple style="display:none">
 
 <script>
 /* Login laeuft ueber Supabase Auth (Authentication > Users) */
@@ -409,6 +410,13 @@ var I18N5={
  fr:{ki_on:"IA : on",ki_off:"IA : off",ki_think:"L'IA réfléchit …",ki_hint:"Mode IA : vraie IA (Opus 4.8) raisonne et pose des questions – quelques centimes par question.",ki_err:"IA injoignable. La fonction 'alzi-ki' est-elle déployée et la clé API définie ?"}
 };
 for(var _l5 in I18N5){for(var _k5 in I18N5[_l5])I18N[_l5][_k5]=I18N5[_l5][_k5];}
+var I18N6={
+ de:{ablage_title:"Wissensablage für Alzi (KI)",ablage_up:"Dokument hochladen",ablage_hint:"Hier alle wichtigen Unterlagen / Betriebsanleitungen ablegen – Alzi durchsucht sie automatisch (auch den PDF-Inhalt)."},
+ en:{ablage_title:"Knowledge files for Alzi (AI)",ablage_up:"Upload document",ablage_hint:"Add all important manuals/docs here – Alzi searches them automatically (incl. PDF content)."},
+ pl:{ablage_title:"Baza wiedzy dla Alzi (AI)",ablage_up:"Wgraj dokument",ablage_hint:"Dodaj tu wszystkie ważne instrukcje – Alzi automatycznie je przeszukuje (także treść PDF)."},
+ fr:{ablage_title:"Base de connaissances pour Alzi (IA)",ablage_up:"Téléverser un document",ablage_hint:"Déposez ici tous les manuels importants – Alzi les consulte automatiquement (contenu PDF inclus)."}
+};
+for(var _l6 in I18N6){for(var _k6 in I18N6[_l6])I18N[_l6][_k6]=I18N6[_l6][_k6];}
 var LANG=lsGet(LS_LANG,"de");if(!I18N[LANG])LANG="de";
 function t(k,vars){var s=(I18N[LANG]&&I18N[LANG][k])||I18N.de[k]||k;if(vars)for(var v in vars)s=s.replace("{"+v+"}",vars[v]);return s;}
 function typeLabel(tp){var k="t_"+(tp&&tp.id?tp.id:tp);return (I18N[LANG]&&I18N[LANG][k])||(tp&&tp.label)||k;}
@@ -1201,6 +1209,47 @@ $("csvIn").onchange=function(){
   rd.readAsText(f);
 };
 
+/* ---- Wissensablage: hochgeladene Unterlagen werden zu Handbuch-Einträgen (mit PDF-Volltext für Alzi/KI) ---- */
+$("wissenIn").onchange=function(){
+  var files=Array.prototype.slice.call(this.files||[]);this.value="";
+  if(!files.length)return;
+  if(!sbReady()){toast("Dateien benötigen eine Cloud-Verbindung");return;}
+  toast(files.some(isPdf)?"PDF wird gelesen & hochgeladen …":(files.length>1?"Dateien werden hochgeladen …":"Datei wird hochgeladen …"));
+  var done=0,ok=0,withText=0;
+  files.forEach(function(f){
+    extractPdfText(f).then(function(txt){
+      return sbUploadFile(f).then(function(url){
+        var name=f.name||"Dokument";
+        var art={id:uid(),type:"handbuch",title:name.replace(/\.[^.]+$/,""),body:"",sym:"",urs:"",los:"",cat:"",tags:[],images:[],
+          files:[{name:name,url:url,type:f.type||"",size:f.size||0,text:txt||""}],
+          modell:"",fahrgestellnr:"",baujahr:"",kunde:"",tuevBis:"",auslieferung:"",ausstattung:"",komponenten:[],reparaturen:[],termine:[],links:[],dokart:"",dbl:[]};
+        saveArticle(art);ok++;if(txt)withText++;done++;
+        if(done===files.length){if($("wissenList"))$("wissenList").innerHTML=wissenRows();renderTabs();renderList();toast(ok+" Datei(en) hinzugefügt"+(withText?" · "+withText+"× PDF-Text gelesen":""));}
+      });
+    }).catch(function(){done++;
+      if(done===files.length){if($("wissenList"))$("wissenList").innerHTML=wissenRows();toast(ok?ok+" Datei(en) hinzugefügt":"Upload fehlgeschlagen");}
+    });
+  });
+};
+function wissenDocs(){return artsArr().filter(function(a){return a.type==="handbuch"&&(a.files||[]).length;}).sort(function(x,y){return (y.updated||"").localeCompare(x.updated||"");});}
+function wissenRows(){
+  var docs=wissenDocs();
+  if(!docs.length)return '<div class="note" style="margin-top:8px">'+esc(t("ablage_hint"))+'</div>';
+  return docs.map(function(a){
+    var f=(a.files||[])[0]||{};
+    var hasText=f.text?' · <span style="color:#16a34a">PDF-Text ✓</span>':'';
+    return '<div class="setrow" style="align-items:center"><span class="l" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">'+esc(a.title||f.name||"Dokument")+hasText+'</span>'+
+      '<button class="btn ghost" data-wopen="'+esc(a.id)+'" style="padding:6px 10px;font-size:12px">'+esc(t("a_open"))+'</button>'+
+      '<button class="btn ghost" data-wdel="'+esc(a.id)+'" style="padding:6px 10px;font-size:12px;color:#dc2626">×</button></div>';
+  }).join("");
+}
+function bindWissen(){
+  if($("wissenUp"))$("wissenUp").onclick=function(){$("wissenIn").click();};
+  var list=$("wissenList");if(!list)return;
+  list.querySelectorAll("[data-wopen]").forEach(function(b){b.onclick=function(){openDetail(this.getAttribute("data-wopen"));};});
+  list.querySelectorAll("[data-wdel]").forEach(function(b){b.onclick=function(){if(!confirm(t("confirm_del")))return;deleteArticle(this.getAttribute("data-wdel"));list.innerHTML=wissenRows();bindWissen();renderTabs();renderList();toast(t("deleted"));};});
+}
+
 /* ===================== Einstellungen ===================== */
 function openSettings(){
   var langBtns=LANGS.map(function(l){return '<button class="langbtn'+(LANG===l.id?" active":"")+'" data-l="'+l.id+'">'+esc(l.label)+'</button>';}).join("");
@@ -1220,10 +1269,14 @@ function openSettings(){
     '<div style="font-size:13px;line-height:1.6;margin-top:8px">1. Auf <b>supabase.com</b> ein Projekt anlegen (Region Frankfurt/EU).<br>2. Im <b>SQL Editor</b> dies ausführen:</div>'+
     '<div class="code">'+esc(SETUP_SQL)+'</div>'+
     '<div style="font-size:13px;line-height:1.6">3. <b>Authentication → Users → Add user</b>: für jeden Techniker E-Mail + Passwort anlegen (Häkchen „Auto Confirm User").<br>4. Unter <b>Project Settings → API</b> die <b>Project URL</b> und den <b>Publishable key</b> (sb_publishable_…) kopieren und oben eintragen → <b>Verbinden</b>.</div>'+
-    '</details>'):'')+
+    '</details>'+
+    '<h4 style="margin:18px 0 6px">'+esc(t("ablage_title"))+'</h4>'+
+    '<div class="note">'+esc(t("ablage_hint"))+'</div>'+
+    '<button class="btn primary" id="wissenUp" style="margin-top:8px"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>'+esc(t("ablage_up"))+'</button>'+
+    '<div id="wissenList" style="margin-top:10px">'+wissenRows()+'</div>'):'')+
     '<hr class="s">'+
     '<button class="btn danger block" id="logoutBtn">'+esc(t("logout"))+'</button>'+
-    '<div style="text-align:center;color:#aab;font-size:11px;margin-top:14px">Alzipedia '+"v27"+(isAdmin()?" · Admin":"")+'</div>'+
+    '<div style="text-align:center;color:#aab;font-size:11px;margin-top:14px">Alzipedia '+"v28"+(isAdmin()?" · Admin":"")+'</div>'+
     '</div>';
   $("viewSet").innerHTML=h;showView("viewSet");setConn(sbReady()?(navigator.onLine?"ok":"off"):"");
   $("setBack").onclick=function(){showView("viewList");};
@@ -1236,6 +1289,7 @@ function openSettings(){
   };
   if($("sbClear"))$("sbClear").onclick=function(){if(!confirm("Verbindung trennen und abmelden?"))return;authForceLogout();SB={url:"",key:""};lsSet(LS_SB,SB);location.reload();};
   $("logoutBtn").onclick=function(){authLogout().then(function(){location.reload();});};
+  bindWissen();
 }
 
 /* ===================== Lightbox ===================== */
