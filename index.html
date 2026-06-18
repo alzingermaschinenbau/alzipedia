@@ -707,7 +707,7 @@ function aTerms(q){return String(q||"").toLowerCase().split(/[^a-z0-9äöüß]+/
 function aFields(a){
   return {hi:[a.title,a.sym,(a.tags||[]).join(" ")].join(" ").toLowerCase(),
     md:[a.urs,a.los,a.cat,a.modell,a.fahrgestellnr,a.dokart,(a.komponenten||[]).map(function(k){return (k.bez||"")+" "+(k.sn||"");}).join(" "),(a.files||[]).map(function(fl){return fl.name||"";}).join(" ")].join(" ").toLowerCase(),
-    lo:[a.body,a.ausstattung,(a.reparaturen||[]).map(function(r){return r.text||"";}).join(" "),(a.dbl?dblText(a):"")].join(" ").toLowerCase()};
+    lo:[a.body,a.ausstattung,(a.reparaturen||[]).map(function(r){return r.text||"";}).join(" "),(a.dbl?dblText(a):""),(a.files||[]).map(function(fl){return fl.text||"";}).join(" ")].join(" ").toLowerCase()};
 }
 function assistRank(q){
   var terms=aTerms(q);if(!terms.length)return [];
@@ -1049,16 +1049,42 @@ $("imgIn").onchange=function(){
     });
   });
 };
+/* ---- PDF-Volltext beim Hochladen auslesen (pdf.js, kostenlos) ---- */
+function loadPdfJs(){
+  if(window.pdfjsLib&&window.pdfjsLib.getDocument)return Promise.resolve(window.pdfjsLib);
+  return new Promise(function(res,rej){
+    var s=document.createElement("script");
+    s.src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+    s.onload=function(){try{window.pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";res(window.pdfjsLib);}catch(e){rej(e);}};
+    s.onerror=function(){rej(new Error("pdfjs"));};
+    document.head.appendChild(s);
+  });
+}
+function isPdf(f){return /pdf/i.test(f.type||"")||/\.pdf$/i.test(f.name||"");}
+function extractPdfText(file){
+  if(!isPdf(file))return Promise.resolve("");
+  return loadPdfJs().then(function(lib){
+    return file.arrayBuffer().then(function(buf){
+      return lib.getDocument({data:new Uint8Array(buf)}).promise.then(function(pdf){
+        var n=pdf.numPages,out="",seq=Promise.resolve();
+        for(var i=1;i<=n;i++){(function(p){seq=seq.then(function(){if(out.length>400000)return;return pdf.getPage(p).then(function(pg){return pg.getTextContent();}).then(function(tc){out+=tc.items.map(function(it){return it.str;}).join(" ")+"\n";});});})(i);}
+        return seq.then(function(){return out.replace(/\s+/g," ").trim().slice(0,400000);});
+      });
+    });
+  }).catch(function(){return "";});
+}
 $("fileIn").onchange=function(){
   var files=Array.prototype.slice.call(this.files||[]);this.value="";
   if(!files.length||!EDIT)return;
   if(!sbReady()){toast("Dateien benötigen eine Cloud-Verbindung");return;}
-  toast(files.length>1?"Dateien werden hochgeladen …":"Datei wird hochgeladen …");
-  var done=0,ok=0;
+  toast(files.some(isPdf)?"PDF wird gelesen & hochgeladen …":(files.length>1?"Dateien werden hochgeladen …":"Datei wird hochgeladen …"));
+  var done=0,ok=0,withText=0;
   files.forEach(function(f){
-    sbUploadFile(f).then(function(url){
-      collectEditor();EDIT.files=EDIT.files||[];EDIT.files.push({name:f.name,url:url,type:f.type||"",size:f.size||0});ok++;done++;
-      if(done===files.length){drawEditor();toast(ok+" Datei(en) hinzugefügt");}
+    extractPdfText(f).then(function(txt){
+      return sbUploadFile(f).then(function(url){
+        collectEditor();EDIT.files=EDIT.files||[];EDIT.files.push({name:f.name,url:url,type:f.type||"",size:f.size||0,text:txt||""});ok++;if(txt)withText++;done++;
+        if(done===files.length){drawEditor();toast(ok+" Datei(en) hinzugefügt"+(withText?" · "+withText+"× PDF-Text gelesen":""));}
+      });
     }).catch(function(){done++;
       if(done===files.length){drawEditor();toast(ok?ok+" Datei(en) hinzugefügt":"Upload fehlgeschlagen");}
     });
@@ -1109,7 +1135,7 @@ function openSettings(){
     '</details>'):'')+
     '<hr class="s">'+
     '<button class="btn danger block" id="logoutBtn">'+esc(t("logout"))+'</button>'+
-    '<div style="text-align:center;color:#aab;font-size:11px;margin-top:14px">Alzipedia '+"v22"+(isAdmin()?" · Admin":"")+'</div>'+
+    '<div style="text-align:center;color:#aab;font-size:11px;margin-top:14px">Alzipedia '+"v23"+(isAdmin()?" · Admin":"")+'</div>'+
     '</div>';
   $("viewSet").innerHTML=h;showView("viewSet");setConn(sbReady()?(navigator.onLine?"ok":"off"):"");
   $("setBack").onclick=function(){showView("viewList");};
