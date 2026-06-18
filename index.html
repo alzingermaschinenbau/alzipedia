@@ -199,6 +199,11 @@ textarea.field{min-height:120px;resize:vertical;line-height:1.5}
 .chatdel:active{transform:scale(.94)}
 .kitog{border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 13px;font-size:13px;font-weight:800;color:var(--muted);cursor:pointer;white-space:nowrap}
 .kitog.on{background:#16a34a;border-color:#16a34a;color:#fff}
+.ivbtn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--red);background:#fff;color:var(--red);border-radius:999px;padding:7px 12px;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap}
+.ivbtn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ivbtn.on{background:var(--red);color:#fff}
+.ivbtn:active{transform:scale(.96)}
+@media(max-width:480px){.ivbtn span{display:none}.ivbtn{padding:9px}}
 .cbub.bot.err{background:#fdecec;color:#a11}
 .typing{display:inline-flex;gap:4px;align-items:center;padding:2px 0}
 .typing i{width:7px;height:7px;border-radius:50%;background:var(--muted);opacity:.4;animation:tdot 1s infinite}
@@ -369,7 +374,7 @@ hr.s{border:0;border-top:1px solid var(--line);margin:16px 0}
 function sha256(ascii){function r(v,a){return (v>>>a)|(v<<(32-a));}var mp=Math.pow,mw=mp(2,32),res="",words=[],bl=ascii.length*8;var hash=sha256.h=sha256.h||[],k=sha256.k=sha256.k||[],pc=k.length,ic={},i,j;for(var c=2;pc<64;c++){if(!ic[c]){for(i=0;i<313;i+=c)ic[i]=c;hash[pc]=(mp(c,.5)*mw)|0;k[pc++]=(mp(c,1/3)*mw)|0;}}ascii+="\x80";while(ascii.length%64-56)ascii+="\x00";for(i=0;i<ascii.length;i++){j=ascii.charCodeAt(i);if(j>>8)return;words[i>>2]|=j<<((3-i)%4)*8;}words[words.length]=((bl/mw)|0);words[words.length]=bl;for(j=0;j<words.length;){var w=words.slice(j,j+=16),oh=hash;hash=hash.slice(0,8);for(i=0;i<64;i++){var w15=w[i-15],w2=w[i-2],a=hash[0],e=hash[4],t1=hash[7]+(r(e,6)^r(e,11)^r(e,25))+((e&hash[5])^((~e)&hash[6]))+k[i]+(w[i]=i<16?w[i]:(w[i-16]+(r(w15,7)^r(w15,18)^(w15>>>3))+w[i-7]+(r(w2,17)^r(w2,19)^(w2>>>10)))|0),t2=(r(a,2)^r(a,13)^r(a,22))+((a&hash[1])^(a&hash[2])^(hash[1]&hash[2]));hash=[(t1+t2)|0].concat(hash);hash[4]=(hash[4]+t1)|0;}for(i=0;i<8;i++)hash[i]=(hash[i]+oh[i])|0;}for(i=0;i<8;i++){for(j=3;j+1;j--){var b=(hash[i]>>(j*8))&255;res+=((b<16)?0:"")+b.toString(16);}}return res;}
 
 var AKEY="alzipedia_auth",UKEY="alzipedia_user";
-var LS_SB="alzipedia_sb",LS_DB="alzipedia_db",LS_Q="alzipedia_queue",LS_AUTH="alzipedia_auth2",LS_CHAT="alzipedia_chat";
+var LS_SB="alzipedia_sb",LS_DB="alzipedia_db",LS_Q="alzipedia_queue",LS_AUTH="alzipedia_auth2",LS_CHAT="alzipedia_chat",LS_IV="alzipedia_interview";
 function $(id){return document.getElementById(id);}
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
 function lsGet(k,def){try{var v=localStorage.getItem(k);return v?JSON.parse(v):def;}catch(e){return def;}}
@@ -430,6 +435,13 @@ var I18N7={
  fr:{train_title:"Entraînement d'Alzi (Q & R)",train_hint:"Apprenez ici à Alzi des réponses fiables. Vous connaissez la machine – Alzi les utilise en priorité.",train_add:"Nouvelle question & réponse",train_q:"Question",train_a:"Réponse (fiable)",train_save:"Apprendre à Alzi",train_update:"Mettre à jour",train_saved:"Appris – Alzi utilise cette réponse.",train_none:"Aucune réponse d'entraînement. Ajoutez la première.",train_badge:"Réponse vérifiée",teach:"Apprendre à Alzi",teach_q_ph:"Question (à quoi se rapporte la réponse ?)",teach_a_ph:"Voici la bonne réponse …"}
 };
 for(var _l7 in I18N7){for(var _k7 in I18N7[_l7])I18N[_l7][_k7]=I18N7[_l7][_k7];}
+var I18N8={
+ de:{iv_start:"Lepton-Training",iv_intro:"Ich stelle dir jetzt nach und nach Fragen zum Lepton 5100. Antworte einfach in deinen Worten – jede Antwort speichere ich als geprüftes Wissen. Mit „Überspringen\" lässt du eine Frage aus, mit „Fertig\" beendest du das Training jederzeit.",iv_skip:"Überspringen",iv_done:"Fertig",iv_saved:"Gespeichert ✓",iv_finish:"Super, danke! Ich habe {n} Antwort(en) zum Lepton 5100 gelernt. Du kannst jederzeit weitermachen – ich merke mir, wo wir waren.",iv_resume:"Wir machen beim Lepton-Training weiter.",iv_run:"Training läuft"},
+ en:{iv_start:"Lepton training",iv_intro:"I'll now ask you questions about the Lepton 5100 one by one. Just answer in your own words – I save every answer as verified knowledge. Use \"Skip\" to pass a question, \"Done\" to end the training anytime.",iv_skip:"Skip",iv_done:"Done",iv_saved:"Saved ✓",iv_finish:"Great, thanks! I learned {n} answer(s) about the Lepton 5100. You can continue anytime – I remember where we left off.",iv_resume:"Let's continue the Lepton training.",iv_run:"Training running"},
+ pl:{iv_start:"Trening Lepton",iv_intro:"Będę zadawać pytania o Lepton 5100 jedno po drugim. Odpowiadaj własnymi słowami – każdą odpowiedź zapisuję jako sprawdzoną wiedzę. „Pomiń\" pomija pytanie, „Gotowe\" kończy trening.",iv_skip:"Pomiń",iv_done:"Gotowe",iv_saved:"Zapisano ✓",iv_finish:"Świetnie, dzięki! Nauczyłem się {n} odpowiedzi o Lepton 5100. Możesz kontynuować w każdej chwili.",iv_resume:"Kontynuujemy trening Lepton.",iv_run:"Trening trwa"},
+ fr:{iv_start:"Formation Lepton",iv_intro:"Je vais vous poser des questions sur le Lepton 5100, une par une. Répondez avec vos mots – j'enregistre chaque réponse comme savoir vérifié. « Passer » saute une question, « Terminé » arrête la formation.",iv_skip:"Passer",iv_done:"Terminé",iv_saved:"Enregistré ✓",iv_finish:"Super, merci ! J'ai appris {n} réponse(s) sur le Lepton 5100. Vous pouvez continuer à tout moment.",iv_resume:"Continuons la formation Lepton.",iv_run:"Formation en cours"}
+};
+for(var _l8 in I18N8){for(var _k8 in I18N8[_l8])I18N[_l8][_k8]=I18N8[_l8][_k8];}
 var LANG=lsGet(LS_LANG,"de");if(!I18N[LANG])LANG="de";
 function t(k,vars){var s=(I18N[LANG]&&I18N[LANG][k])||I18N.de[k]||k;if(vars)for(var v in vars)s=s.replace("{"+v+"}",vars[v]);return s;}
 function typeLabel(tp){var k="t_"+(tp&&tp.id?tp.id:tp);return (I18N[LANG]&&I18N[LANG][k])||(tp&&tp.label)||k;}
@@ -797,7 +809,7 @@ function chatBubbles(){
     if(m.role==="user")return '<div class="cbub user">'+esc(m.text)+'</div>';
     var inner,teachable=false;
     if(m.thinking)inner='<div class="cbub bot"><span class="typing"><i></i><i></i><i></i></span></div>';
-    else if(m.text){inner='<div class="cbub bot rich'+(m.err?" err":"")+'">'+renderText(m.text)+'</div>'+chipRow(m.chips);teachable=!m.err;}
+    else if(m.text){inner='<div class="cbub bot rich'+(m.err?" err":"")+'">'+renderText(m.text)+'</div>'+chipRow(m.chips);teachable=!m.err&&!m.iv;}
     else if(m.none){inner='<div class="cbub bot">'+esc(t("a_none"))+'</div>';teachable=true;}
     else{var head=t("a_found");var cards=(m.items||[]).map(function(id){var a=DB.arts[id];if(!a)return "";var tp=typeOf(a.type);
       return '<div class="cres" data-go="'+esc(id)+'"><span class="badge" style="background:'+tp.col+'">'+esc(a.train?t("train_badge"):typeLabel(tp))+'</span>'+
@@ -838,9 +850,72 @@ function renderChat(){
   };
   box.scrollTop=box.scrollHeight;
 }
+/* ===================== Geführtes Lepton-Training (Alzi fragt, du antwortest) ===================== */
+var LEPTON_Q=[
+ {c:"Allgemein",q:"Lepton 5100: Welche Modell-/Typbezeichnung und Seriennummer hat eure Maschine genau?"},
+ {c:"Allgemein",q:"Lepton 5100: Wofür wird die Maschine eingesetzt – welche Materialien werden gesiebt (z. B. Biomasse, Kompost, Holz, Sperrmüll)?"},
+ {c:"Allgemein",q:"Lepton 5100: Was ist das Grundprinzip der Maschine (Scheibenseparator, Trennen statt Zerkleinern) und in wie viele Fraktionen wird getrennt?"},
+ {c:"Siebdeck 1",q:"Lepton 5100 – Siebdeck 1: Welche Neigung/Winkel ist einstellbar (von … bis …°)?"},
+ {c:"Siebdeck 1",q:"Lepton 5100 – Siebdeck 1: Wie groß ist die Siebfläche und wie viele Siebwalzen hat es?"},
+ {c:"Siebdeck 1",q:"Lepton 5100 – Siebdeck 1: Welche Spaltweite/Körnung ist einstellbar (von … bis … mm)?"},
+ {c:"Siebdeck 1",q:"Lepton 5100 – Siebdeck 1: Welcher Drehzahlbereich der Siebwalzen ist möglich (U/min)?"},
+ {c:"Siebdeck 2",q:"Lepton 5100 – Siebdeck 2: Welche Neigung/Winkel ist einstellbar (von … bis …°)?"},
+ {c:"Siebdeck 2",q:"Lepton 5100 – Siebdeck 2: Wie groß ist die Siebfläche und wie viele Siebwalzen hat es?"},
+ {c:"Siebdeck 2",q:"Lepton 5100 – Siebdeck 2: Welche Spaltweite/Körnung ist einstellbar (von … bis … mm)?"},
+ {c:"Siebdeck 2",q:"Lepton 5100 – Siebdeck 2: Welcher Drehzahlbereich der Siebwalzen ist möglich (U/min)?"},
+ {c:"Antrieb",q:"Lepton 5100: Welcher Antrieb ist verbaut (diesel-elektrisch?) und welche Leistung in kW?"},
+ {c:"Antrieb",q:"Lepton 5100: Welcher Motor/Aggregat-Typ ist verbaut und welcher Kraftstoffverbrauch ist üblich?"},
+ {c:"Leistung",q:"Lepton 5100: Welcher Durchsatz ist erreichbar (m³/h oder t/h) und wovon hängt er ab?"},
+ {c:"Maße",q:"Lepton 5100: Wie sind Transportmaße (Länge, Breite, Höhe) und das Gesamtgewicht?"},
+ {c:"Transport",q:"Lepton 5100: Wie ist die Fahrwerks-/Achskonfiguration und die Straßenzulassung (km/h, Sondergenehmigung nötig?)?"},
+ {c:"Ausstattung",q:"Lepton 5100: Welche optionale Ausstattung habt ihr verbaut (Windsichter, Magnetabscheider, Vorsiebdeck, Wassersprühanlage, Kompressor, Funkfernbedienung)?"},
+ {c:"Bedienung",q:"Lepton 5100: Wie wird die Maschine bedient (Terminal/Display, Funkfernbedienung) und wie stellt man Walzenabstand und Neigung ein?"},
+ {c:"Steuerung",q:"Lepton 5100: Welche Steuerung/SPS ist verbaut und welche Frequenzumrichter/FU steuern die Walzen (Typ/Bezeichnung)?"},
+ {c:"Einstellung",q:"Lepton 5100: Welche Grundeinstellungen (Neigung, Drehzahl, Spaltweite) empfiehlst du für trockenes Material – und welche für nasses/schweres Material?"},
+ {c:"Einstellung",q:"Lepton 5100: Welche Einstellung nimmst du, wenn ein Siebdeck überlastet ist oder Material staut?"},
+ {c:"Wartung",q:"Lepton 5100: Welche täglichen/wöchentlichen Wartungsarbeiten sind nötig (Schmierung, Reinigung, Kontrolle)?"},
+ {c:"Wartung",q:"Lepton 5100: Welche Wartungsintervalle gelten für Motor, Hydraulik und Lager (Betriebsstunden)?"},
+ {c:"Wartung",q:"Lepton 5100: Welche Verschleißteile gibt es typischerweise und wie erkennt man, dass sie getauscht werden müssen?"},
+ {c:"Hydraulik",q:"Lepton 5100: Welche Hydraulikkomponenten sind kritisch und welches Hydrauliköl/welche Mengen werden verwendet?"},
+ {c:"Störungen",q:"Lepton 5100: Was sind die häufigsten Störungen im Betrieb und wie behebt man sie?"},
+ {c:"Störungen",q:"Lepton 5100: Welche typischen Fehlercodes/Displaymeldungen gibt es und was bedeuten sie?"},
+ {c:"Störungen",q:"Lepton 5100: Was tun, wenn eine Siebwalze nicht dreht oder ungleichmäßig läuft?"},
+ {c:"Sicherheit",q:"Lepton 5100: Welche Sicherheitseinrichtungen (Not-Aus, Schutzgitter) gibt es und worauf muss der Bediener achten?"},
+ {c:"Sonstiges",q:"Lepton 5100: Gibt es Besonderheiten, Tricks oder häufige Bedienfehler, die jeder Techniker kennen sollte?"}
+];
+var INTERVIEW=lsGet(LS_IV,{active:false,i:0,saved:0});
+function ivPersist(){lsSet(LS_IV,{active:INTERVIEW.active,i:INTERVIEW.i,saved:INTERVIEW.saved});}
+function ivStart(){
+  INTERVIEW={active:true,i:(INTERVIEW&&INTERVIEW.i&&INTERVIEW.i<LEPTON_Q.length?INTERVIEW.i:0),saved:0};ivPersist();
+  CHAT.push({role:"bot",text:(INTERVIEW.i>0?t("iv_resume")+"\n\n":"")+t("iv_intro"),ts:Date.now()});
+  ivAskNext("");
+}
+function ivAskNext(prefix){
+  if(INTERVIEW.i>=LEPTON_Q.length){ivFinish();return;}
+  var item=LEPTON_Q[INTERVIEW.i];
+  var head="**"+item.c+" · "+(INTERVIEW.i+1)+"/"+LEPTON_Q.length+"**\n";
+  CHAT.push({role:"bot",text:(prefix||"")+head+item.q,chips:[t("iv_skip"),t("iv_done")],iv:true,ts:Date.now()});
+  if(CHAT.length>80)CHAT=CHAT.slice(-80);
+  lsSet(LS_CHAT,CHAT);renderChat();
+}
+function ivFinish(){
+  INTERVIEW.active=false;ivPersist();
+  CHAT.push({role:"bot",text:t("iv_finish",{n:INTERVIEW.saved}),ts:Date.now()});
+  lsSet(LS_CHAT,CHAT);renderChat();renderTabs();renderList();
+}
+function ivAnswer(ans){
+  var low=(ans||"").trim().toLowerCase();
+  if(low===t("iv_done").toLowerCase()||/^(fertig|stop|stopp|beenden|ende|schluss|done|finish|gotowe|koniec|termin[ée]|fini)$/.test(low)){ivFinish();return;}
+  var skip=(low===t("iv_skip").toLowerCase()||/^(überspringen|skip|weiter|next|pomi[ńn]|dalej|passer|suivant|sauter)$/.test(low));
+  var item=LEPTON_Q[INTERVIEW.i];var pre="";
+  if(!skip&&item){saveTraining(item.q,ans);INTERVIEW.saved++;pre="✓ "+t("iv_saved")+"\n\n";}
+  INTERVIEW.i++;ivPersist();
+  ivAskNext(pre);
+}
 function chatAsk(q){
   q=(q||"").trim();if(!q)return;
   CHAT.push({role:"user",text:q,ts:Date.now()});
+  if(INTERVIEW&&INTERVIEW.active){ivAnswer(q);return;}
   if(KIMODE){
     CHAT.push({role:"bot",thinking:true});
     if(CHAT.length>60)CHAT=CHAT.slice(-60);
@@ -894,14 +969,15 @@ function kiAnswer(q){
 function openChat(){
   $("viewChat").innerHTML='<button class="btn ghost" id="chatBack" style="margin-bottom:12px"><svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>'+esc(t("back"))+'</button>'+
     '<div class="detail chatpane">'+
-    '<div class="chathd"><h2 style="margin:0">'+esc(t("a_title"))+'</h2><div class="chacts"><button class="kitog'+(KIMODE?" on":"")+'" id="kiTog">'+esc(KIMODE?t("ki_on"):t("ki_off"))+'</button><button class="chatdel" id="chatClear" title="'+esc(t("a_clear"))+'"><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg></button></div></div>'+
+    '<div class="chathd"><h2 style="margin:0">'+esc(t("a_title"))+'</h2><div class="chacts">'+(isAdmin()?'<button class="ivbtn'+(INTERVIEW&&INTERVIEW.active?" on":"")+'" id="ivBtn" title="'+esc(t("iv_start"))+'"><svg viewBox="0 0 24 24"><path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1 2.7 3 6 3s6-2 6-3v-5"/></svg><span>'+esc(INTERVIEW&&INTERVIEW.active?t("iv_run"):t("iv_start"))+'</span></button>':'')+'<button class="kitog'+(KIMODE?" on":"")+'" id="kiTog">'+esc(KIMODE?t("ki_on"):t("ki_off"))+'</button><button class="chatdel" id="chatClear" title="'+esc(t("a_clear"))+'"><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg></button></div></div>'+
     '<div id="chatMsgs" class="chatmsgs"></div>'+
     '<form id="chatForm" class="chatbar"><input id="chatIn" class="field" placeholder="'+esc(t("a_ph"))+'" autocomplete="off"><button class="btn primary" type="submit"><svg viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg></button></form>'+
     '</div>';
   showView("viewChat");renderChat();
   $("chatBack").onclick=function(){showView("viewList");};
   $("kiTog").onclick=function(){KIMODE=!KIMODE;lsSet(LS_KIMODE,KIMODE);this.className="kitog"+(KIMODE?" on":"");this.textContent=KIMODE?t("ki_on"):t("ki_off");if(KIMODE)toast(t("ki_hint"));};
-  $("chatClear").onclick=function(){if(CHAT.length&&!confirm(t("a_clear")+"?"))return;CHAT=[];lsSet(LS_CHAT,CHAT);renderChat();};
+  $("chatClear").onclick=function(){if(CHAT.length&&!confirm(t("a_clear")+"?"))return;CHAT=[];lsSet(LS_CHAT,CHAT);if(INTERVIEW){INTERVIEW.active=false;ivPersist();}renderChat();};
+  if($("ivBtn"))$("ivBtn").onclick=function(){if(INTERVIEW&&INTERVIEW.active){ivFinish();}else{ivStart();}var on=INTERVIEW&&INTERVIEW.active;this.className="ivbtn"+(on?" on":"");var sp=this.querySelector("span");if(sp)sp.textContent=on?t("iv_run"):t("iv_start");};
   $("chatForm").addEventListener("submit",function(ev){ev.preventDefault();var v=$("chatIn").value;$("chatIn").value="";chatAsk(v);});
   setTimeout(function(){try{$("chatIn").focus();}catch(e){}},50);
 }
@@ -1350,7 +1426,7 @@ function openSettings(){
     '<div id="trainList" style="margin-top:10px">'+trainRows()+'</div>'):'')+
     '<hr class="s">'+
     '<button class="btn danger block" id="logoutBtn">'+esc(t("logout"))+'</button>'+
-    '<div style="text-align:center;color:#aab;font-size:11px;margin-top:14px">Alzipedia '+"v29"+(isAdmin()?" · Admin":"")+'</div>'+
+    '<div style="text-align:center;color:#aab;font-size:11px;margin-top:14px">Alzipedia '+"v30"+(isAdmin()?" · Admin":"")+'</div>'+
     '</div>';
   $("viewSet").innerHTML=h;showView("viewSet");setConn(sbReady()?(navigator.onLine?"ok":"off"):"");
   $("setBack").onclick=function(){showView("viewList");};
