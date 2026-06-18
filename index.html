@@ -706,7 +706,7 @@ function aHit(field,w){var fr=aExpand(w);for(var i=0;i<fr.length;i++){if(field.i
 function aTerms(q){return String(q||"").toLowerCase().split(/[^a-z0-9äöüß]+/).filter(function(w){return w.length>=2&&!STOP[w];});}
 function aFields(a){
   return {hi:[a.title,a.sym,(a.tags||[]).join(" ")].join(" ").toLowerCase(),
-    md:[a.urs,a.los,a.cat,a.modell,a.fahrgestellnr,a.dokart,(a.komponenten||[]).map(function(k){return (k.bez||"")+" "+(k.sn||"");}).join(" ")].join(" ").toLowerCase(),
+    md:[a.urs,a.los,a.cat,a.modell,a.fahrgestellnr,a.dokart,(a.komponenten||[]).map(function(k){return (k.bez||"")+" "+(k.sn||"");}).join(" "),(a.files||[]).map(function(fl){return fl.name||"";}).join(" ")].join(" ").toLowerCase(),
     lo:[a.body,a.ausstattung,(a.reparaturen||[]).map(function(r){return r.text||"";}).join(" "),(a.dbl?dblText(a):"")].join(" ").toLowerCase()};
 }
 function assistRank(q){
@@ -1109,7 +1109,7 @@ function openSettings(){
     '</details>'):'')+
     '<hr class="s">'+
     '<button class="btn danger block" id="logoutBtn">'+esc(t("logout"))+'</button>'+
-    '<div style="text-align:center;color:#aab;font-size:11px;margin-top:14px">Alzipedia '+"v21"+(isAdmin()?" · Admin":"")+'</div>'+
+    '<div style="text-align:center;color:#aab;font-size:11px;margin-top:14px">Alzipedia '+"v22"+(isAdmin()?" · Admin":"")+'</div>'+
     '</div>';
   $("viewSet").innerHTML=h;showView("viewSet");setConn(sbReady()?(navigator.onLine?"ok":"off"):"");
   $("setBack").onclick=function(){showView("viewList");};
