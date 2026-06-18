@@ -193,7 +193,10 @@ textarea.field{min-height:120px;resize:vertical;line-height:1.5}
 .langbtn.active{background:var(--red);border-color:var(--red);color:#fff}
 .chatpane{display:flex;flex-direction:column;min-height:70vh}
 .chathd{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-.chacts{display:flex;align-items:center;gap:8px}
+.chacts{display:flex;align-items:center;gap:8px;flex:0 0 auto}
+.chatdel{border:1px solid var(--line);background:#fff;border-radius:10px;width:40px;height:40px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:#c00000;flex:0 0 auto}
+.chatdel svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.chatdel:active{transform:scale(.94)}
 .kitog{border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 13px;font-size:13px;font-weight:800;color:var(--muted);cursor:pointer;white-space:nowrap}
 .kitog.on{background:#16a34a;border-color:#16a34a;color:#fff}
 .cbub.bot.err{background:#fdecec;color:#a11}
@@ -839,14 +842,14 @@ function kiAnswer(q){
 function openChat(){
   $("viewChat").innerHTML='<button class="btn ghost" id="chatBack" style="margin-bottom:12px"><svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>'+esc(t("back"))+'</button>'+
     '<div class="detail chatpane">'+
-    '<div class="chathd"><h2 style="margin:0">'+esc(t("a_title"))+'</h2><div class="chacts"><button class="kitog'+(KIMODE?" on":"")+'" id="kiTog">'+esc(KIMODE?t("ki_on"):t("ki_off"))+'</button><button class="btn ghost" id="chatClear" style="padding:7px 11px;font-size:13px">'+esc(t("a_clear"))+'</button></div></div>'+
+    '<div class="chathd"><h2 style="margin:0">'+esc(t("a_title"))+'</h2><div class="chacts"><button class="kitog'+(KIMODE?" on":"")+'" id="kiTog">'+esc(KIMODE?t("ki_on"):t("ki_off"))+'</button><button class="chatdel" id="chatClear" title="'+esc(t("a_clear"))+'"><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg></button></div></div>'+
     '<div id="chatMsgs" class="chatmsgs"></div>'+
     '<form id="chatForm" class="chatbar"><input id="chatIn" class="field" placeholder="'+esc(t("a_ph"))+'" autocomplete="off"><button class="btn primary" type="submit"><svg viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg></button></form>'+
     '</div>';
   showView("viewChat");renderChat();
   $("chatBack").onclick=function(){showView("viewList");};
   $("kiTog").onclick=function(){KIMODE=!KIMODE;lsSet(LS_KIMODE,KIMODE);this.className="kitog"+(KIMODE?" on":"");this.textContent=KIMODE?t("ki_on"):t("ki_off");if(KIMODE)toast(t("ki_hint"));};
-  $("chatClear").onclick=function(){CHAT=[];lsSet(LS_CHAT,CHAT);renderChat();};
+  $("chatClear").onclick=function(){if(CHAT.length&&!confirm(t("a_clear")+"?"))return;CHAT=[];lsSet(LS_CHAT,CHAT);renderChat();};
   $("chatForm").addEventListener("submit",function(ev){ev.preventDefault();var v=$("chatIn").value;$("chatIn").value="";chatAsk(v);});
   setTimeout(function(){try{$("chatIn").focus();}catch(e){}},50);
 }
@@ -1220,7 +1223,7 @@ function openSettings(){
     '</details>'):'')+
     '<hr class="s">'+
     '<button class="btn danger block" id="logoutBtn">'+esc(t("logout"))+'</button>'+
-    '<div style="text-align:center;color:#aab;font-size:11px;margin-top:14px">Alzipedia '+"v26"+(isAdmin()?" · Admin":"")+'</div>'+
+    '<div style="text-align:center;color:#aab;font-size:11px;margin-top:14px">Alzipedia '+"v27"+(isAdmin()?" · Admin":"")+'</div>'+
     '</div>';
   $("viewSet").innerHTML=h;showView("viewSet");setConn(sbReady()?(navigator.onLine?"ok":"off"):"");
   $("setBack").onclick=function(){showView("viewList");};
