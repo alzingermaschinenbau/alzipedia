@@ -193,6 +193,14 @@ textarea.field{min-height:120px;resize:vertical;line-height:1.5}
 .langbtn.active{background:var(--red);border-color:var(--red);color:#fff}
 .chatpane{display:flex;flex-direction:column;min-height:70vh}
 .chathd{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.chacts{display:flex;align-items:center;gap:8px}
+.kitog{border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 13px;font-size:13px;font-weight:800;color:var(--muted);cursor:pointer;white-space:nowrap}
+.kitog.on{background:#16a34a;border-color:#16a34a;color:#fff}
+.cbub.bot.err{background:#fdecec;color:#a11}
+.typing{display:inline-flex;gap:4px;align-items:center;padding:2px 0}
+.typing i{width:7px;height:7px;border-radius:50%;background:var(--muted);opacity:.4;animation:tdot 1s infinite}
+.typing i:nth-child(2){animation-delay:.2s}.typing i:nth-child(3){animation-delay:.4s}
+@keyframes tdot{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:.9;transform:translateY(-3px)}}
 .chatmsgs{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:4px 0 12px;min-height:50vh}
 .cintro{color:var(--muted);font-size:14px;text-align:center;padding:24px 10px}
 .cbub{max-width:92%;border-radius:14px;padding:11px 13px;font-size:14px;line-height:1.5;white-space:pre-wrap;word-break:break-word}
@@ -379,6 +387,13 @@ var I18N4={
  fr:{a_title:"Assistant",a_ph:"Posez une question … (ex. erreur 123, moteur de crible ne tourne pas)",a_intro:"Posez une question – je cherche la réponse dans votre savoir Alzipedia (pannes, guides, FAQ, machines).",a_none:"Je n'ai rien trouvé. Créez plutôt une entrée (ex. dans Dépannage).",a_found:"Meilleures correspondances :",a_clear:"Effacer",a_open:"Ouvrir",a_send:"Envoyer"}
 };
 for(var _l4 in I18N4){for(var _k4 in I18N4[_l4])I18N[_l4][_k4]=I18N4[_l4][_k4];}
+var I18N5={
+ de:{ki_on:"KI: an",ki_off:"KI: aus",ki_think:"KI denkt nach …",ki_hint:"KI-Modus an: echte KI (Opus 4.8) denkt mit & fragt zurück – kostet wenige Cent je Frage.",ki_err:"KI nicht erreichbar. Ist die Edge Function 'alzi-ki' deployt und der API-Key gesetzt?"},
+ en:{ki_on:"AI: on",ki_off:"AI: off",ki_think:"AI is thinking …",ki_hint:"AI mode on: real AI (Opus 4.8) reasons & asks back – costs a few cents per question.",ki_err:"AI not reachable. Is the edge function 'alzi-ki' deployed and the API key set?"},
+ pl:{ki_on:"AI: wł.",ki_off:"AI: wył.",ki_think:"AI myśli …",ki_hint:"Tryb AI: prawdziwa AI (Opus 4.8) myśli i dopytuje – kilka centów za pytanie.",ki_err:"AI niedostępne. Czy funkcja 'alzi-ki' jest wdrożona, a klucz API ustawiony?"},
+ fr:{ki_on:"IA : on",ki_off:"IA : off",ki_think:"L'IA réfléchit …",ki_hint:"Mode IA : vraie IA (Opus 4.8) raisonne et pose des questions – quelques centimes par question.",ki_err:"IA injoignable. La fonction 'alzi-ki' est-elle déployée et la clé API définie ?"}
+};
+for(var _l5 in I18N5){for(var _k5 in I18N5[_l5])I18N[_l5][_k5]=I18N5[_l5][_k5];}
 var LANG=lsGet(LS_LANG,"de");if(!I18N[LANG])LANG="de";
 function t(k,vars){var s=(I18N[LANG]&&I18N[LANG][k])||I18N.de[k]||k;if(vars)for(var v in vars)s=s.replace("{"+v+"}",vars[v]);return s;}
 function typeLabel(tp){var k="t_"+(tp&&tp.id?tp.id:tp);return (I18N[LANG]&&I18N[LANG][k])||(tp&&tp.label)||k;}
@@ -683,6 +698,9 @@ function showView(name){
 
 /* ===================== Assistent (kostenlose Suche über eigene DB) ===================== */
 var CHAT=lsGet(LS_CHAT,[]);
+var LS_KIMODE="alzipedia_kimode";
+var KIMODE=lsGet(LS_KIMODE,false);
+var KIMODEL="claude-opus-4-8";
 var STOP={der:1,die:1,das:1,und:1,oder:1,ist:1,im:1,am:1,ein:1,eine:1,ich:1,es:1,an:1,auf:1,zu:1,mit:1,von:1,"für":1,nicht:1,mehr:1,was:1,wie:1,den:1,dem:1,er:1,sie:1,bei:1,the:1,a:1,to:1,of:1,is:1,my:1};
 var SYNG=[
  ["dreht","drehen","läuft","laufen","geht","funktioniert","arbeitet","startet","rotiert","bewegt"],
@@ -726,6 +744,8 @@ function assistAnswer(a){
 function chatBubbles(){
   return CHAT.map(function(m){
     if(m.role==="user")return '<div class="cbub user">'+esc(m.text)+'</div>';
+    if(m.thinking)return '<div class="cbub bot"><span class="typing"><i></i><i></i><i></i></span></div>';
+    if(m.text)return '<div class="cbub bot'+(m.err?" err":"")+'">'+esc(m.text)+'</div>';
     if(m.none)return '<div class="cbub bot">'+esc(t("a_none"))+'</div>';
     var head=t("a_found");
     var cards=(m.items||[]).map(function(id){var a=DB.arts[id];if(!a)return "";var tp=typeOf(a.type);
@@ -746,21 +766,62 @@ function renderChat(){
 function chatAsk(q){
   q=(q||"").trim();if(!q)return;
   CHAT.push({role:"user",text:q});
-  var r=assistRank(q);
-  if(r.length)CHAT.push({role:"bot",items:r.map(function(x){return x.a.id;})});
-  else CHAT.push({role:"bot",none:true});
-  if(CHAT.length>60)CHAT=CHAT.slice(-60);
-  lsSet(LS_CHAT,CHAT);renderChat();
+  if(KIMODE){
+    CHAT.push({role:"bot",thinking:true});
+    if(CHAT.length>60)CHAT=CHAT.slice(-60);
+    lsSet(LS_CHAT,CHAT);renderChat();
+    kiAnswer(q);
+  }else{
+    var r=assistRank(q);
+    if(r.length)CHAT.push({role:"bot",items:r.map(function(x){return x.a.id;})});
+    else CHAT.push({role:"bot",none:true});
+    if(CHAT.length>60)CHAT=CHAT.slice(-60);
+    lsSet(LS_CHAT,CHAT);renderChat();
+  }
+}
+function kiContext(q){
+  return assistRank(q).map(function(x){var a=x.a;var s="### "+typeLabel(typeOf(a.type))+": "+(a.title||"")+"\n";
+    if(a.type==="stoerung"){if(a.sym)s+="Symptom: "+a.sym+"\n";if(a.urs)s+="Ursache: "+a.urs+"\n";if(a.los)s+="Lösung: "+a.los+"\n";}
+    else{if(a.modell)s+="Modell: "+a.modell+"\n";if(a.dokart)s+="Dokumentart: "+a.dokart+"\n";if(a.body)s+=a.body+"\n";if(a.ausstattung)s+="Ausstattung: "+a.ausstattung+"\n";}
+    var ft=(a.files||[]).map(function(fl){return fl.text||"";}).join(" ").trim();if(ft)s+="Aus Dokument: "+ft.slice(0,2000)+"\n";
+    if(a.dbl&&a.dbl.length)s+="Datenblätter: "+dblText(a).slice(0,1200)+"\n";
+    return s;}).join("\n").slice(0,16000);
+}
+function aiMessages(){
+  var out=[];
+  CHAT.forEach(function(m){
+    if(m.thinking)return;
+    if(m.role==="user")out.push({role:"user",content:m.text||""});
+    else if(m.text)out.push({role:"assistant",content:m.text});
+    else if(m.items)out.push({role:"assistant",content:"Gefundene Einträge: "+m.items.map(function(id){return DB.arts[id]&&DB.arts[id].title;}).filter(Boolean).join("; ")});
+    else if(m.none)out.push({role:"assistant",content:"Dazu nichts gefunden."});
+  });
+  return out;
+}
+function kiFail(msg){CHAT=CHAT.filter(function(m){return !m.thinking;});CHAT.push({role:"bot",text:"⚠️ "+msg,err:true});lsSet(LS_CHAT,CHAT);renderChat();}
+function kiAnswer(q){
+  if(!sbReady()){kiFail(t("conn_no"));return;}
+  ensureToken().then(function(){
+    return fetch(sbOrigin()+"/functions/v1/alzi-ki",{method:"POST",headers:{apikey:SB.key,Authorization:"Bearer "+sbBearer(),"Content-Type":"application/json"},body:JSON.stringify({messages:aiMessages(),context:kiContext(q),model:KIMODEL,lang:LANG})});
+  }).then(function(r){return r.json().catch(function(){return {error:"Antwort unlesbar"};});})
+   .then(function(d){
+     CHAT=CHAT.filter(function(m){return !m.thinking;});
+     if(d&&d.answer)CHAT.push({role:"bot",text:d.answer});
+     else CHAT.push({role:"bot",text:"⚠️ "+((d&&d.error)?d.error:t("ki_err")),err:true});
+     if(CHAT.length>60)CHAT=CHAT.slice(-60);
+     lsSet(LS_CHAT,CHAT);renderChat();
+   }).catch(function(){kiFail(t("ki_err"));});
 }
 function openChat(){
   $("viewChat").innerHTML='<button class="btn ghost" id="chatBack" style="margin-bottom:12px"><svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>'+esc(t("back"))+'</button>'+
     '<div class="detail chatpane">'+
-    '<div class="chathd"><h2 style="margin:0">'+esc(t("a_title"))+'</h2><button class="btn ghost" id="chatClear" style="padding:7px 11px;font-size:13px">'+esc(t("a_clear"))+'</button></div>'+
+    '<div class="chathd"><h2 style="margin:0">'+esc(t("a_title"))+'</h2><div class="chacts"><button class="kitog'+(KIMODE?" on":"")+'" id="kiTog">'+esc(KIMODE?t("ki_on"):t("ki_off"))+'</button><button class="btn ghost" id="chatClear" style="padding:7px 11px;font-size:13px">'+esc(t("a_clear"))+'</button></div></div>'+
     '<div id="chatMsgs" class="chatmsgs"></div>'+
     '<form id="chatForm" class="chatbar"><input id="chatIn" class="field" placeholder="'+esc(t("a_ph"))+'" autocomplete="off"><button class="btn primary" type="submit"><svg viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg></button></form>'+
     '</div>';
   showView("viewChat");renderChat();
   $("chatBack").onclick=function(){showView("viewList");};
+  $("kiTog").onclick=function(){KIMODE=!KIMODE;lsSet(LS_KIMODE,KIMODE);this.className="kitog"+(KIMODE?" on":"");this.textContent=KIMODE?t("ki_on"):t("ki_off");if(KIMODE)toast(t("ki_hint"));};
   $("chatClear").onclick=function(){CHAT=[];lsSet(LS_CHAT,CHAT);renderChat();};
   $("chatForm").addEventListener("submit",function(ev){ev.preventDefault();var v=$("chatIn").value;$("chatIn").value="";chatAsk(v);});
   setTimeout(function(){try{$("chatIn").focus();}catch(e){}},50);
@@ -1135,7 +1196,7 @@ function openSettings(){
     '</details>'):'')+
     '<hr class="s">'+
     '<button class="btn danger block" id="logoutBtn">'+esc(t("logout"))+'</button>'+
-    '<div style="text-align:center;color:#aab;font-size:11px;margin-top:14px">Alzipedia '+"v23"+(isAdmin()?" · Admin":"")+'</div>'+
+    '<div style="text-align:center;color:#aab;font-size:11px;margin-top:14px">Alzipedia '+"v24"+(isAdmin()?" · Admin":"")+'</div>'+
     '</div>';
   $("viewSet").innerHTML=h;showView("viewSet");setConn(sbReady()?(navigator.onLine?"ok":"off"):"");
   $("setBack").onclick=function(){showView("viewList");};
