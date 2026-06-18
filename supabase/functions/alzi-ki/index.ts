@@ -39,6 +39,7 @@ Regeln:
 - Nenne Parameter/Werte nur, wenn sie in der Wissensbasis stehen oder fachlich allgemein gültig sind. Erfinde KEINE Fehlercodes, Seriennummern oder Parameter.
 - Wenn die Wissensbasis nichts hergibt, sage das ehrlich und gib bestmögliche allgemeine Hinweise, klar als allgemein gekennzeichnet.
 - Fasse dich kurz. Antworte in der Sprache des Nutzers (Standard: ${lang}).
+- Wenn eine kurze Auswahl die Diagnose voranbringt (z. B. bei einer Rückfrage), hänge als ALLERLETZTE Zeile genau dieses Format an: "VORSCHLÄGE: Option A | Option B | Option C" (max. 4 kurze Optionen). Wenn keine Auswahl sinnvoll ist, lass diese Zeile komplett weg.
 
 WISSENSBASIS:
 ${context || "(keine passenden Inhalte gefunden)"}`;
