@@ -684,6 +684,25 @@ function showView(name){
 /* ===================== Assistent (kostenlose Suche über eigene DB) ===================== */
 var CHAT=lsGet(LS_CHAT,[]);
 var STOP={der:1,die:1,das:1,und:1,oder:1,ist:1,im:1,am:1,ein:1,eine:1,ich:1,es:1,an:1,auf:1,zu:1,mit:1,von:1,"für":1,nicht:1,mehr:1,was:1,wie:1,den:1,dem:1,er:1,sie:1,bei:1,the:1,a:1,to:1,of:1,is:1,my:1};
+var SYNG=[
+ ["dreht","drehen","läuft","laufen","geht","funktioniert","arbeitet","startet","rotiert","bewegt"],
+ ["fehler","fehlermeldung","störung","stoerung","error","alarm","meldung","code","fehlercode"],
+ ["motor","antrieb","aggregat","getriebemotor"],
+ ["band","förderband","foerderband","gurt","transportband"],
+ ["sieb","siebdeck","siebung","siebmaschine","decks"],
+ ["hydraulik","hydr","öl","oel","hydrauliköl"],
+ ["defekt","kaputt","ausgefallen","tot","hinüber"],
+ ["heiß","heiss","überhitzt","ueberhitzt","warm","temperatur","heiss"],
+ ["stopp","stop","aus","abschaltung","abgeschaltet","steht"],
+ ["fu","frequenzumrichter","umrichter","movitrac","sew"],
+ ["sicherung","sicherungsautomat","automat","motorschutz","motorschutzschalter"],
+ ["display","anzeige","bildschirm","terminal","opus"],
+ ["leck","undicht","leckage","tropft"],
+ ["zu","viel","feinanteil","feinkorn","verschmutzt"]
+];
+var SYN={};SYNG.forEach(function(g){g.forEach(function(w){SYN[w]=g;});});
+function aExpand(w){return SYN[w]||[w];}
+function aHit(field,w){var fr=aExpand(w);for(var i=0;i<fr.length;i++){if(field.indexOf(fr[i])>=0)return true;}return false;}
 function aTerms(q){return String(q||"").toLowerCase().split(/[^a-z0-9äöüß]+/).filter(function(w){return w.length>=2&&!STOP[w];});}
 function aFields(a){
   return {hi:[a.title,a.sym,(a.tags||[]).join(" ")].join(" ").toLowerCase(),
@@ -694,7 +713,7 @@ function assistRank(q){
   var terms=aTerms(q);if(!terms.length)return [];
   var out=artsArr().map(function(a){
     var f=aFields(a),s=0;
-    terms.forEach(function(w){if(f.hi.indexOf(w)>=0)s+=5;if(f.md.indexOf(w)>=0)s+=2;if(f.lo.indexOf(w)>=0)s+=1;});
+    terms.forEach(function(w){if(aHit(f.hi,w))s+=5;if(aHit(f.md,w))s+=2;if(aHit(f.lo,w))s+=1;});
     return {a:a,s:s};
   }).filter(function(x){return x.s>0;});
   out.sort(function(x,y){return y.s-x.s||(y.a.updated||"").localeCompare(x.a.updated||"");});
@@ -1090,7 +1109,7 @@ function openSettings(){
     '</details>'):'')+
     '<hr class="s">'+
     '<button class="btn danger block" id="logoutBtn">'+esc(t("logout"))+'</button>'+
-    '<div style="text-align:center;color:#aab;font-size:11px;margin-top:14px">Alzipedia '+"v20"+(isAdmin()?" · Admin":"")+'</div>'+
+    '<div style="text-align:center;color:#aab;font-size:11px;margin-top:14px">Alzipedia '+"v21"+(isAdmin()?" · Admin":"")+'</div>'+
     '</div>';
   $("viewSet").innerHTML=h;showView("viewSet");setConn(sbReady()?(navigator.onLine?"ok":"off"):"");
   $("setBack").onclick=function(){showView("viewList");};
