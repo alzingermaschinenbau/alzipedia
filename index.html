@@ -768,8 +768,8 @@ function showView(name){
 
 /* ===================== Assistent (kostenlose Suche über eigene DB) ===================== */
 var CHAT=lsGet(LS_CHAT,[]);
-var LS_KIMODE="alzipedia_kimode";
-var KIMODE=lsGet(LS_KIMODE,false);
+var LS_KIMODE="alzipedia_kimode2";
+var KIMODE=lsGet(LS_KIMODE,true);
 var KIMODEL="claude-opus-4-8";
 var TEACH=null; // {q:Frage, a:Antwort} – aktive Lern-Karte im Chat
 var STOP={der:1,die:1,das:1,und:1,oder:1,ist:1,im:1,am:1,ein:1,eine:1,ich:1,es:1,an:1,auf:1,zu:1,mit:1,von:1,"für":1,nicht:1,mehr:1,was:1,wie:1,den:1,dem:1,er:1,sie:1,bei:1,the:1,a:1,to:1,of:1,is:1,my:1};
@@ -807,7 +807,7 @@ function assistRank(q){
     return {a:a,s:s};
   }).filter(function(x){return x.s>0;});
   out.sort(function(x,y){return y.s-x.s||(y.a.updated||"").localeCompare(x.a.updated||"");});
-  return out.slice(0,4);
+  return out.slice(0,6);
 }
 function assistAnswer(a){
   if(a.type==="stoerung")return plain((a.los?a.los:(a.urs?a.urs:a.sym))||a.title);
@@ -934,7 +934,7 @@ function chatAsk(q){
     lsSet(LS_CHAT,CHAT);renderChat();
     kiAnswer(q);
   }else{
-    var r=assistRank(q);
+    var r=assistRank(q).slice(0,4);
     if(r.length)CHAT.push({role:"bot",items:r.map(function(x){return x.a.id;}),ts:Date.now()});
     else CHAT.push({role:"bot",none:true,ts:Date.now()});
     if(CHAT.length>60)CHAT=CHAT.slice(-60);
@@ -942,14 +942,34 @@ function chatAsk(q){
   }
 }
 function kiContext(q){
+  var terms=aTerms(q);
   return assistRank(q).map(function(x){var a=x.a;
     if(a.train){return "### ✅ GEPRÜFTE EXPERTEN-ANTWORT (verbindlich, hat Vorrang)\nFrage: "+(a.title||"")+"\nVerbindliche Antwort: "+(a.body||"")+"\n";}
     var s="### "+typeLabel(typeOf(a.type))+": "+(a.title||"")+"\n";
     if(a.type==="stoerung"){if(a.sym)s+="Symptom: "+a.sym+"\n";if(a.urs)s+="Ursache: "+a.urs+"\n";if(a.los)s+="Lösung: "+a.los+"\n";}
     else{if(a.modell)s+="Modell: "+a.modell+"\n";if(a.dokart)s+="Dokumentart: "+a.dokart+"\n";if(a.body)s+=a.body+"\n";if(a.ausstattung)s+="Ausstattung: "+a.ausstattung+"\n";}
-    var ft=(a.files||[]).map(function(fl){return fl.text||"";}).join(" ").trim();if(ft)s+="Aus Dokument: "+ft.slice(0,2000)+"\n";
-    if(a.dbl&&a.dbl.length)s+="Datenblätter: "+dblText(a).slice(0,1200)+"\n";
-    return s;}).join("\n").slice(0,16000);
+    var ft=(a.files||[]).map(function(fl){return fl.text||"";}).join("\n").trim();
+    if(ft)s+="Aus dem Dokument „"+((a.files||[])[0]&&(a.files[0].name)||a.title||"")+"\" (relevante Stellen):\n"+bestPassage(ft,terms,3200)+"\n";
+    if(a.dbl&&a.dbl.length)s+="Datenblätter: "+dblText(a).slice(0,1500)+"\n";
+    return s;}).join("\n").slice(0,30000);
+}
+/* Findet im (langen) Dokumenttext die Stelle mit der höchsten Dichte an Suchbegriffen
+   und liefert einen Ausschnitt rundherum – damit Alzi die ECHTE Antwort sieht, nicht nur das Deckblatt. */
+function bestPassage(text,terms,win){
+  text=String(text||"");win=win||3000;
+  if(text.length<=win)return text;
+  terms=(terms||[]).map(function(w){return (w||"").toLowerCase();}).filter(function(w){return w.length>=2;});
+  var exp=[];terms.forEach(function(w){aExpand(w).forEach(function(e){if(exp.indexOf(e)<0)exp.push(e);});});
+  if(!exp.length)return text.slice(0,win);
+  var low=text.toLowerCase(),step=Math.max(160,Math.floor(win/6)),best=0,bestScore=-1;
+  for(var p=0;p<low.length;p+=step){
+    var seg=low.slice(p,p+win),sc=0;
+    for(var i=0;i<exp.length;i++){var idx=seg.indexOf(exp[i]);if(idx>=0)sc++;}
+    if(sc>bestScore){bestScore=sc;best=p;}
+  }
+  if(bestScore<=0)return text.slice(0,win);
+  var start=Math.max(0,best-Math.floor(win*0.15));
+  return (start>0?"… ":"")+text.slice(start,start+win).trim()+(start+win<text.length?" …":"");
 }
 function aiMessages(){
   var out=[];
@@ -1347,7 +1367,14 @@ $("wissenIn").onchange=function(){
   if(!files.length)return;
   if(!sbReady()){toast("Dateien benötigen eine Cloud-Verbindung");return;}
   toast(files.some(isPdf)?"PDF wird gelesen & hochgeladen …":(files.length>1?"Dateien werden hochgeladen …":"Datei wird hochgeladen …"));
-  var done=0,ok=0,withText=0;
+  var done=0,ok=0,withText=0,noText=0;
+  function finish(){
+    if(done!==files.length)return;
+    if($("wissenList"))$("wissenList").innerHTML=wissenRows();renderTabs();renderList();
+    var msg=ok+" Datei(en) hinzugefügt"+(withText?" · "+withText+"× Text gelesen":"");
+    toast(msg);
+    if(noText)setTimeout(function(){toast("⚠️ "+noText+" PDF ohne lesbaren Text (vermutlich gescannt) – Alzi kann den Inhalt NICHT durchsuchen.");},2400);
+  }
   files.forEach(function(f){
     extractPdfText(f).then(function(txt){
       return sbUploadFile(f).then(function(url){
@@ -1355,12 +1382,9 @@ $("wissenIn").onchange=function(){
         var art={id:uid(),type:"handbuch",title:name.replace(/\.[^.]+$/,""),body:"",sym:"",urs:"",los:"",cat:"",tags:[],images:[],
           files:[{name:name,url:url,type:f.type||"",size:f.size||0,text:txt||""}],
           modell:"",fahrgestellnr:"",baujahr:"",kunde:"",tuevBis:"",auslieferung:"",ausstattung:"",komponenten:[],reparaturen:[],termine:[],links:[],dokart:"",dbl:[]};
-        saveArticle(art);ok++;if(txt)withText++;done++;
-        if(done===files.length){if($("wissenList"))$("wissenList").innerHTML=wissenRows();renderTabs();renderList();toast(ok+" Datei(en) hinzugefügt"+(withText?" · "+withText+"× PDF-Text gelesen":""));}
+        saveArticle(art);ok++;if(txt&&txt.length>40)withText++;else if(isPdf(f))noText++;done++;finish();
       });
-    }).catch(function(){done++;
-      if(done===files.length){if($("wissenList"))$("wissenList").innerHTML=wissenRows();toast(ok?ok+" Datei(en) hinzugefügt":"Upload fehlgeschlagen");}
-    });
+    }).catch(function(){done++;finish();});
   });
 };
 function wissenDocs(){return artsArr().filter(function(a){return a.type==="handbuch"&&(a.files||[]).length;}).sort(function(x,y){return (y.updated||"").localeCompare(x.updated||"");});}
@@ -1438,7 +1462,7 @@ function openSettings(){
     '<div id="trainList" style="margin-top:10px">'+trainRows()+'</div>'):'')+
     '<hr class="s">'+
     '<button class="btn danger block" id="logoutBtn">'+esc(t("logout"))+'</button>'+
-    '<div style="text-align:center;color:#aab;font-size:11px;margin-top:14px">Alzipedia '+"v32"+(isAdmin()?" · Admin":"")+'</div>'+
+    '<div style="text-align:center;color:#aab;font-size:11px;margin-top:14px">Alzipedia '+"v33"+(isAdmin()?" · Admin":"")+'</div>'+
     '</div>';
   $("viewSet").innerHTML=h;showView("viewSet");setConn(sbReady()?(navigator.onLine?"ok":"off"):"");
   $("setBack").onclick=function(){showView("viewList");};
