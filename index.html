@@ -241,6 +241,12 @@ textarea.field{min-height:120px;resize:vertical;line-height:1.5}
 .teachcard{align-self:stretch;background:#fff;border:1px solid var(--red);border-radius:14px;padding:13px;margin-top:6px}
 .teachcard .tlb{display:block;font-size:12px;font-weight:800;color:var(--muted);margin:8px 0 4px}
 .teachcard textarea{min-height:64px}
+.trthumbs{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+.trth{position:relative;width:64px;height:64px;border-radius:8px;overflow:hidden;border:1px solid var(--line)}
+.trth img{width:100%;height:100%;object-fit:cover;display:block;cursor:zoom-in}
+.trth .trrm{position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;font-size:13px;line-height:18px;text-align:center;cursor:pointer;font-style:normal}
+.cimgs{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.cimgs img{max-width:160px;max-height:160px;border-radius:10px;border:1px solid var(--line);cursor:zoom-in;display:block}
 .cbub{max-width:92%;border-radius:14px;padding:11px 13px;font-size:14px;line-height:1.5;white-space:pre-wrap;word-break:break-word}
 .cbub.user{align-self:flex-end;background:var(--red);color:#fff;border-bottom-right-radius:4px}
 .cbub.bot{align-self:flex-start;background:#f1f3f6;color:var(--ink);border-bottom-left-radius:4px}
@@ -379,6 +385,7 @@ hr.s{border:0;border-top:1px solid var(--line);margin:16px 0}
 <input type="file" id="fileIn" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" multiple style="display:none">
 <input type="file" id="csvIn" accept=".csv,text/csv" style="display:none">
 <input type="file" id="wissenIn" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" multiple style="display:none">
+<input type="file" id="imgPick" accept="image/*" multiple style="display:none">
 
 <script>
 /* Login laeuft ueber Supabase Auth (Authentication > Users) */
@@ -454,6 +461,13 @@ var I18N8={
  fr:{iv_start:"Formation Lepton",iv_intro:"Je vais vous poser des questions sur le Lepton 5100, une par une. Répondez avec vos mots – j'enregistre chaque réponse comme savoir vérifié. « Passer » saute une question, « Terminé » arrête la formation.",iv_skip:"Passer",iv_done:"Terminé",iv_saved:"Enregistré ✓",iv_finish:"Super, merci ! J'ai appris {n} réponse(s) sur le Lepton 5100. Vous pouvez continuer à tout moment.",iv_resume:"Continuons la formation Lepton.",iv_run:"Formation en cours"}
 };
 for(var _l8 in I18N8){for(var _k8 in I18N8[_l8])I18N[_l8][_k8]=I18N8[_l8][_k8];}
+var I18N9={
+ de:{add_img:"Bild",img_added:"Bild hinzugefügt"},
+ en:{add_img:"Image",img_added:"Image added"},
+ pl:{add_img:"Zdjęcie",img_added:"Dodano zdjęcie"},
+ fr:{add_img:"Image",img_added:"Image ajoutée"}
+};
+for(var _l9 in I18N9){for(var _k9 in I18N9[_l9])I18N[_l9][_k9]=I18N9[_l9][_k9];}
 var LANG=lsGet(LS_LANG,"de");if(!I18N[LANG])LANG="de";
 function t(k,vars){var s=(I18N[LANG]&&I18N[LANG][k])||I18N.de[k]||k;if(vars)for(var v in vars)s=s.replace("{"+v+"}",vars[v]);return s;}
 function typeLabel(tp){var k="t_"+(tp&&tp.id?tp.id:tp);return (I18N[LANG]&&I18N[LANG][k])||(tp&&tp.label)||k;}
@@ -615,13 +629,14 @@ function saveArticle(art){
   else queuePush({op:"up",id:art.id,art:art});
 }
 function trainDocs(){return artsArr().filter(function(a){return a.train;}).sort(function(x,y){return (y.updated||"").localeCompare(x.updated||"");});}
-function saveTraining(frage,antwort,id){
+function saveTraining(frage,antwort,id,images){
   frage=(frage||"").trim();antwort=(antwort||"").trim();
   if(!frage||!antwort)return false;
   var art;
   if(id&&DB.arts[id]){art=JSON.parse(JSON.stringify(DB.arts[id]));}
   else{art={id:uid(),type:"faq",tags:[],images:[],files:[],komponenten:[],reparaturen:[],termine:[],links:[],dbl:[]};}
   art.train=true;art.title=frage;art.body=antwort;art.sym="";art.urs="";art.los="";art.cat="";
+  if(images)art.images=images.slice();
   saveArticle(art);return true;
 }
 function deleteArticle(id){
@@ -771,7 +786,8 @@ var CHAT=lsGet(LS_CHAT,[]);
 var LS_KIMODE="alzipedia_kimode2";
 var KIMODE=lsGet(LS_KIMODE,true);
 var KIMODEL="claude-opus-4-8";
-var TEACH=null; // {q:Frage, a:Antwort} – aktive Lern-Karte im Chat
+var TEACH=null; // {q:Frage, a:Antwort, imgs:[]} – aktive Lern-Karte im Chat
+var TRIMG=[];   // Bilder für das Training-Formular in den Einstellungen
 var STOP={der:1,die:1,das:1,und:1,oder:1,ist:1,im:1,am:1,ein:1,eine:1,ich:1,es:1,an:1,auf:1,zu:1,mit:1,von:1,"für":1,nicht:1,mehr:1,was:1,wie:1,den:1,dem:1,er:1,sie:1,bei:1,the:1,a:1,to:1,of:1,is:1,my:1};
 var SYNG=[
  ["dreht","drehen","läuft","laufen","geht","funktioniert","arbeitet","startet","rotiert","bewegt"],
@@ -821,7 +837,7 @@ function chatBubbles(){
     if(m.role==="user")return '<div class="cbub user">'+esc(m.text)+'</div>';
     var inner,teachable=false;
     if(m.thinking)inner='<div class="cbub bot"><span class="typing"><i></i><i></i><i></i></span></div>';
-    else if(m.text){inner='<div class="cbub bot rich'+(m.err?" err":"")+'">'+renderText(m.text)+'</div>'+chipRow(m.chips);teachable=!m.err&&!m.iv;}
+    else if(m.text){inner='<div class="cbub bot rich'+(m.err?" err":"")+'">'+renderText(m.text)+'</div>'+chatImgs(m.imgs)+chipRow(m.chips);teachable=!m.err&&!m.iv;}
     else if(m.none){inner='<div class="cbub bot">'+esc(t("a_none"))+'</div>';teachable=true;}
     else{var head=t("a_found");var cards=(m.items||[]).map(function(id){var a=DB.arts[id];if(!a)return "";var tp=typeOf(a.type);
       return '<div class="cres" data-go="'+esc(id)+'"><span class="badge" style="background:'+tp.col+'">'+esc(a.train?t("train_badge"):typeLabel(tp))+'</span>'+
@@ -835,13 +851,16 @@ function chatBubbles(){
 }
 function teachCard(){
   if(!TEACH)return "";
+  TEACH.imgs=TEACH.imgs||[];
   return '<div class="teachcard"><div class="bhd">'+esc(t("train_save"))+'</div>'+
     '<label class="tlb">'+esc(t("train_q"))+'</label><textarea class="field" id="teachQ" placeholder="'+esc(t("teach_q_ph"))+'">'+esc(TEACH.q||"")+'</textarea>'+
     '<label class="tlb">'+esc(t("train_a"))+'</label><textarea class="field" id="teachA" placeholder="'+esc(t("teach_a_ph"))+'">'+esc(TEACH.a||"")+'</textarea>'+
-    '<div class="row" style="margin-top:8px"><button class="btn primary" id="teachSave">'+esc(t("train_save"))+'</button><button class="btn ghost" id="teachCancel">'+esc(t("cancel"))+'</button></div></div>';
+    imgThumbs(TEACH.imgs,"data-teachrm")+
+    '<div class="row" style="margin-top:8px"><button class="btn ghost" id="teachImg" type="button"><svg viewBox="0 0 24 24"><path d="M3 5h18v14H3z"/><path d="M3 15l5-5 4 4 3-3 6 6"/><circle cx="8.5" cy="8.5" r="1.5"/></svg>'+esc(t("add_img"))+'</button><button class="btn primary" id="teachSave">'+esc(t("train_save"))+'</button><button class="btn ghost" id="teachCancel">'+esc(t("cancel"))+'</button></div></div>';
 }
 var ASK_EX=["Fehler 123 am Display","Siebdeck 1 überlastet – was prüfen?","FU N301 Parameter","Welche TÜV-Termine sind fällig?"];
 function chipRow(chips){if(!chips||!chips.length)return "";return '<div class="chiprow">'+chips.map(function(c){return '<button class="chip" type="button" data-chip="'+esc(c)+'">'+esc(c)+'</button>';}).join("")+'</div>';}
+function chatImgs(imgs){if(!imgs||!imgs.length)return "";return '<div class="cimgs">'+imgs.map(function(u){return '<img src="'+esc(u)+'" data-lb="'+esc(u)+'" alt="">';}).join("")+'</div>';}
 function chatIntro(){
   return '<div class="cwrap bot">'+botHead(null)+'<div class="cbub bot rich"><b>'+esc(t("a_hello"))+'</b><br>'+esc(t("a_intro"))+(KIMODE?'<div class="kidisc">Antworten können KI-generiert sein.</div>':'')+'</div>'+chipRow(ASK_EX)+'</div>';
 }
@@ -855,11 +874,14 @@ function renderChat(){
   var tb=box.querySelectorAll(".teachbtn");
   for(var k=0;k<tb.length;k++)tb[k].onclick=function(){TEACH={q:this.getAttribute("data-teach")||"",a:""};renderChat();var qa=$("teachA");if(qa)qa.focus();};
   if($("teachCancel"))$("teachCancel").onclick=function(){TEACH=null;renderChat();};
+  if($("teachImg"))$("teachImg").onclick=function(){var fq=$("teachQ").value,fa=$("teachA").value;pickImage(function(url){TEACH.q=fq;TEACH.a=fa;TEACH.imgs=TEACH.imgs||[];TEACH.imgs.push(url);renderChat();});};
+  box.querySelectorAll("[data-teachrm]").forEach(function(b){b.onclick=function(){TEACH.q=$("teachQ").value;TEACH.a=$("teachA").value;TEACH.imgs.splice(+this.getAttribute("data-teachrm"),1);renderChat();};});
   if($("teachSave"))$("teachSave").onclick=function(){
     var fq=($("teachQ").value||"").trim(),fa=($("teachA").value||"").trim();
     if(!fq||!fa){toast(t("train_q")+" + "+t("train_a")+"?");return;}
-    saveTraining(fq,fa);TEACH=null;toast(t("train_saved"));renderTabs();renderList();renderChat();
+    saveTraining(fq,fa,null,TEACH.imgs);TEACH=null;toast(t("train_saved"));renderTabs();renderList();renderChat();
   };
+  box.querySelectorAll("[data-lb]").forEach(function(im){im.onclick=function(){lightbox(this.getAttribute("data-lb"));};});
   box.scrollTop=box.scrollHeight;
 }
 /* ===================== Geführtes Lepton-Training (Alzi fragt, du antwortest) ===================== */
@@ -983,6 +1005,11 @@ function aiMessages(){
   return out;
 }
 function kiFail(msg){CHAT=CHAT.filter(function(m){return !m.thinking;});CHAT.push({role:"bot",text:"⚠️ "+msg,err:true,ts:Date.now()});lsSet(LS_CHAT,CHAT);renderChat();}
+function answerImgs(q){
+  var ranked=assistRank(q);
+  for(var i=0;i<ranked.length;i++){var im=ranked[i].a.images;if(im&&im.length)return im.slice(0,3);}
+  return [];
+}
 function kiAnswer(q){
   if(!sbReady()){kiFail(t("conn_no"));return;}
   ensureToken().then(function(){
@@ -992,7 +1019,7 @@ function kiAnswer(q){
      CHAT=CHAT.filter(function(m){return !m.thinking;});
      if(d&&d.answer){var ans=d.answer,chips=[];var mm=ans.match(/VORSCHL[ÄA]GE\s*:\s*([^\n]+)\s*$/i);
        if(mm){chips=mm[1].split("|").map(function(s){return s.trim();}).filter(Boolean).slice(0,4);ans=ans.slice(0,mm.index).trim();}
-       CHAT.push({role:"bot",text:ans,chips:chips,ts:Date.now()});}
+       CHAT.push({role:"bot",text:ans,chips:chips,imgs:answerImgs(q),ts:Date.now()});}
      else CHAT.push({role:"bot",text:"⚠️ "+((d&&d.error)?d.error:t("ki_err")),err:true,ts:Date.now()});
      if(CHAT.length>60)CHAT=CHAT.slice(-60);
      lsSet(LS_CHAT,CHAT);renderChat();
@@ -1297,6 +1324,24 @@ $("imgIn").onchange=function(){
     });
   });
 };
+/* ---- Wiederverwendbarer Bild-Picker (für Training & „Alzi beibringen") ---- */
+var IMGCB=null;
+$("imgPick").onchange=function(){
+  var files=Array.prototype.slice.call(this.files||[]);this.value="";
+  if(!files.length||!IMGCB)return;var cb=IMGCB;
+  toast("Bild wird verarbeitet …");
+  files.forEach(function(f){
+    resizeImage(f,1500,function(dataUri){
+      if(!dataUri)return;
+      sbUploadImage(dataUri).then(function(url){cb(url);}).catch(function(){cb(dataUri);});
+    });
+  });
+};
+function pickImage(cb){IMGCB=cb;$("imgPick").click();}
+function imgThumbs(arr,rmAttr){
+  if(!arr||!arr.length)return "";
+  return '<div class="trthumbs">'+arr.map(function(u,i){return '<span class="trth"><img src="'+esc(u)+'" data-lb="'+esc(u)+'"><i class="trrm" '+rmAttr+'="'+i+'">×</i></span>';}).join("")+'</div>';
+}
 /* ---- PDF-Volltext beim Hochladen auslesen (pdf.js, kostenlos) ---- */
 function loadPdfJs(){
   if(window.pdfjsLib&&window.pdfjsLib.getDocument)return Promise.resolve(window.pdfjsLib);
@@ -1415,12 +1460,21 @@ function trainRows(){
       '<button class="btn ghost" data-tdel="'+esc(a.id)+'" style="padding:6px 10px;font-size:12px;color:#dc2626">×</button></div>';
   }).join("");
 }
+function refreshTrThumbs(){if($("trThumbs")){$("trThumbs").innerHTML=imgThumbs(TRIMG,"data-trrm");bindTrThumbs();}}
+function bindTrThumbs(){
+  if($("trainImg"))$("trainImg").onclick=function(){pickImage(function(url){TRIMG.push(url);refreshTrThumbs();toast(t("img_added"));});};
+  var tw=$("trThumbs");if(tw){
+    tw.querySelectorAll("[data-trrm]").forEach(function(b){b.onclick=function(){TRIMG.splice(+this.getAttribute("data-trrm"),1);refreshTrThumbs();};});
+    tw.querySelectorAll("[data-lb]").forEach(function(im){im.onclick=function(){lightbox(this.getAttribute("data-lb"));};});
+  }
+}
 function bindTraining(){
-  if($("trainAdd"))$("trainAdd").onclick=function(){var f=$("trainForm");if(f)f.style.display=(f.style.display==="none"?"block":"none");if(f&&f.style.display==="block"&&$("trainQ"))$("trainQ").focus();};
+  if($("trainAdd"))$("trainAdd").onclick=function(){var f=$("trainForm");if(f)f.style.display=(f.style.display==="none"?"block":"none");if(f&&f.style.display==="block"){TRIMG=[];refreshTrThumbs();if($("trainQ"))$("trainQ").focus();}};
+  bindTrThumbs();
   if($("trainSave"))$("trainSave").onclick=function(){
     var fq=($("trainQ").value||"").trim(),fa=($("trainA").value||"").trim();
     if(!fq||!fa){toast(t("train_q")+" + "+t("train_a")+"?");return;}
-    if(saveTraining(fq,fa)){$("trainQ").value="";$("trainA").value="";if($("trainForm"))$("trainForm").style.display="none";
+    if(saveTraining(fq,fa,null,TRIMG)){TRIMG=[];$("trainQ").value="";$("trainA").value="";if($("trainForm"))$("trainForm").style.display="none";
       if($("trainList"))$("trainList").innerHTML=trainRows();bindTraining();renderTabs();renderList();toast(t("train_saved"));}
   };
   var list=$("trainList");if(!list)return;
@@ -1458,11 +1512,12 @@ function openSettings(){
     '<div id="trainForm" style="display:none;margin-top:10px">'+
       '<div class="fg"><label>'+esc(t("train_q"))+'</label><textarea class="field" id="trainQ" placeholder="'+esc(t("teach_q_ph"))+'"></textarea></div>'+
       '<div class="fg"><label>'+esc(t("train_a"))+'</label><textarea class="field" id="trainA" placeholder="'+esc(t("teach_a_ph"))+'"></textarea></div>'+
-      '<button class="btn primary" id="trainSave">'+esc(t("train_save"))+'</button></div>'+
+      '<div id="trThumbs">'+imgThumbs(TRIMG,"data-trrm")+'</div>'+
+      '<div class="row"><button class="btn ghost" id="trainImg" type="button"><svg viewBox="0 0 24 24"><path d="M3 5h18v14H3z"/><path d="M3 15l5-5 4 4 3-3 6 6"/><circle cx="8.5" cy="8.5" r="1.5"/></svg>'+esc(t("add_img"))+'</button><button class="btn primary" id="trainSave">'+esc(t("train_save"))+'</button></div></div>'+
     '<div id="trainList" style="margin-top:10px">'+trainRows()+'</div>'):'')+
     '<hr class="s">'+
     '<button class="btn danger block" id="logoutBtn">'+esc(t("logout"))+'</button>'+
-    '<div style="text-align:center;color:#aab;font-size:11px;margin-top:14px">Alzipedia '+"v33"+(isAdmin()?" · Admin":"")+'</div>'+
+    '<div style="text-align:center;color:#aab;font-size:11px;margin-top:14px">Alzipedia '+"v34"+(isAdmin()?" · Admin":"")+'</div>'+
     '</div>';
   $("viewSet").innerHTML=h;showView("viewSet");setConn(sbReady()?(navigator.onLine?"ok":"off"):"");
   $("setBack").onclick=function(){showView("viewList");};
