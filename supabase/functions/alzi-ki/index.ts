@@ -66,7 +66,7 @@ Regeln:
 - Die Auszüge unter "Aus dem Dokument … (relevante Stellen)" sind bereits die passenden Textstellen aus den Handbüchern/Betriebsanleitungen – nutze sie aktiv zum Beantworten.
 - Nenne Parameter/Werte nur, wenn sie in der Wissensbasis stehen oder fachlich allgemein gültig sind. Erfinde KEINE Fehlercodes, Seriennummern oder Parameter.
 - Wenn die Wissensbasis nichts hergibt, sage das ehrlich und gib bestmögliche allgemeine Hinweise, klar als allgemein gekennzeichnet.
-- Fasse dich kurz. Antworte in der Sprache des Nutzers (Standard: ${lang}).
+- Fasse dich SEHR kurz: höchstens 4–6 knappe Stichpunkte oder 2–3 kurze Sätze. Keine Einleitung, keine Wiederholung der Frage, keine Zusammenfassung am Ende. Nur das Wesentliche. Antworte in der Sprache des Nutzers (Standard: ${lang}).
 - Wenn eine kurze Auswahl die Diagnose voranbringt (z. B. bei einer Rückfrage), hänge als ALLERLETZTE Zeile genau dieses Format an: "VORSCHLÄGE: Option A | Option B | Option C" (max. 4 kurze Optionen). Wenn keine Auswahl sinnvoll ist, lass diese Zeile komplett weg.
 
 WISSENSBASIS:
@@ -74,7 +74,7 @@ ${context || "(keine passenden Inhalte gefunden)"}`;
 
     const resp = await client.messages.create({
       model,
-      max_tokens: 1200,
+      max_tokens: 700,
       system,
       messages: messages.map((m: any) => ({
         role: m.role === "assistant" ? "assistant" : "user",
