@@ -260,6 +260,11 @@ textarea.field{min-height:120px;resize:vertical;line-height:1.5}
 .chatbar .field{flex:1;margin:0}
 .chatbar .btn{padding:11px 14px}
 .chatbar .btn svg{margin:0}
+.micbtn{flex:0 0 auto;width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:#fff;color:var(--red);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.micbtn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.micbtn:active{transform:scale(.94)}
+.micbtn.on{background:var(--red);color:#fff;animation:micpulse 1.2s infinite}
+@keyframes micpulse{0%,100%{box-shadow:0 0 0 0 rgba(192,0,0,.5)}50%{box-shadow:0 0 0 8px rgba(192,0,0,0)}}
 .typegrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .typepick{border:1px solid var(--line);border-radius:10px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;
   display:flex;align-items:center;gap:9px;background:#fff;color:var(--ink)}
@@ -476,22 +481,27 @@ for(var _l8 in I18N8){for(var _k8 in I18N8[_l8])I18N[_l8][_k8]=I18N8[_l8][_k8];}
 var I18N9={
  de:{add_img:"Bild",img_added:"Bild hinzugefügt",iv_head:"Neue Frage · schon {n} gelernt",
   learn_btn:"Dokumente lernen",learn_hint:"Liest den Text aller PDFs ein, damit Alzi den Inhalt kennt – vor dem Training einmal ausführen.",
-  learn_run:"Lerne Dokument {n}/{t} …",learn_done:"Fertig: {ok} eingelesen · {bad} nicht lesbar (Scan/kein Text)",learn_none:"Alle Dokumente sind bereits eingelesen."},
+  learn_run:"Lerne Dokument {n}/{t} …",learn_done:"Fertig: {ok} eingelesen · {bad} nicht lesbar (Scan/kein Text)",learn_none:"Alle Dokumente sind bereits eingelesen.",
+  mic_title:"Sprechen",mic_listen:"Sprich jetzt …",mic_perm:"Mikrofon nicht erlaubt – in den Einstellungen freigeben.",mic_no:"Spracheingabe hier nicht möglich – nutze die Mikrofon-Taste der Tastatur."},
  en:{add_img:"Image",img_added:"Image added",iv_head:"New question · {n} learned",
   learn_btn:"Learn documents",learn_hint:"Reads the text of all PDFs so Alzi knows their content – run once before training.",
-  learn_run:"Learning document {n}/{t} …",learn_done:"Done: {ok} read · {bad} unreadable (scan/no text)",learn_none:"All documents are already read."},
+  learn_run:"Learning document {n}/{t} …",learn_done:"Done: {ok} read · {bad} unreadable (scan/no text)",learn_none:"All documents are already read.",
+  mic_title:"Speak",mic_listen:"Speak now …",mic_perm:"Microphone not allowed – enable it in settings.",mic_no:"Voice input not available here – use the keyboard's microphone key."},
  pl:{add_img:"Zdjęcie",img_added:"Dodano zdjęcie",iv_head:"Nowe pytanie · nauczono {n}",
   learn_btn:"Wczytaj dokumenty",learn_hint:"Wczytuje tekst wszystkich PDF, aby Alzi znał treść – uruchom raz przed treningiem.",
-  learn_run:"Wczytywanie {n}/{t} …",learn_done:"Gotowe: {ok} wczytano · {bad} nieczytelne (skan)",learn_none:"Wszystkie dokumenty są już wczytane."},
+  learn_run:"Wczytywanie {n}/{t} …",learn_done:"Gotowe: {ok} wczytano · {bad} nieczytelne (skan)",learn_none:"Wszystkie dokumenty są już wczytane.",
+  mic_title:"Mów",mic_listen:"Mów teraz …",mic_perm:"Brak dostępu do mikrofonu – włącz w ustawieniach.",mic_no:"Wprowadzanie głosowe niedostępne – użyj mikrofonu klawiatury."},
  fr:{add_img:"Image",img_added:"Image ajoutée",iv_head:"Nouvelle question · {n} appris",
   learn_btn:"Apprendre les docs",learn_hint:"Lit le texte de tous les PDF pour qu'Alzi en connaisse le contenu – à lancer avant la formation.",
-  learn_run:"Lecture {n}/{t} …",learn_done:"Terminé : {ok} lus · {bad} illisibles (scan)",learn_none:"Tous les documents sont déjà lus."}
+  learn_run:"Lecture {n}/{t} …",learn_done:"Terminé : {ok} lus · {bad} illisibles (scan)",learn_none:"Tous les documents sont déjà lus.",
+  mic_title:"Parler",mic_listen:"Parlez …",mic_perm:"Micro non autorisé – activez-le dans les réglages.",mic_no:"Saisie vocale indisponible ici – utilisez le micro du clavier."}
 };
 for(var _l9 in I18N9){for(var _k9 in I18N9[_l9])I18N[_l9][_k9]=I18N9[_l9][_k9];}
 I18N.de.whatsnew="Was ist neu?";I18N.en.whatsnew="What's new?";I18N.pl.whatsnew="Co nowego?";I18N.fr.whatsnew="Nouveautés ?";
 I18N.de.changelog="Versionsverlauf";I18N.en.changelog="Version history";I18N.pl.changelog="Historia wersji";I18N.fr.changelog="Historique des versions";
-var APPVER="v37";
+var APPVER="v38";
 var CHANGELOG=[
+ {v:"v38",d:"Mikrofon-Button im Chat: in Alzi sprechen statt tippen (Spracheingabe in der App-Sprache). Auf iPhone-Homescreen evtl. eingeschränkt – dann Tastatur-Mikrofon nutzen."},
  {v:"v37",d:"Button „Dokumente lernen\": liest den Text aller PDFs in der Wissensablage ein (auch Altbestand), damit Alzi den Inhalt kennt – vor dem Training einmal ausführen."},
  {v:"v36",d:"Training fragt nur noch nach LÜCKEN: Alzi kennt jetzt den Inhalt der Wissensablage und fragt nicht mehr nach Dingen, die schon in der Betriebsanleitung/Serviceliste stehen."},
  {v:"v35",d:"Lepton-Training: Alzi stellt jetzt immer NEUE Fragen (KI-generiert, keine Wiederholungen)."},
@@ -1142,7 +1152,7 @@ function openChat(){
     '<div class="detail chatpane">'+
     '<div class="chathd"><h2 style="margin:0">'+esc(t("a_title"))+'</h2><div class="chacts">'+(isAdmin()?'<button class="ivbtn'+(INTERVIEW&&INTERVIEW.active?" on":"")+'" id="ivBtn" title="'+esc(t("iv_start"))+'"><svg viewBox="0 0 24 24"><path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1 2.7 3 6 3s6-2 6-3v-5"/></svg><span>'+esc(INTERVIEW&&INTERVIEW.active?t("iv_run"):t("iv_start"))+'</span></button>':'')+'<button class="kitog'+(KIMODE?" on":"")+'" id="kiTog">'+esc(KIMODE?t("ki_on"):t("ki_off"))+'</button><button class="chatdel" id="chatClear" title="'+esc(t("a_clear"))+'"><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg></button></div></div>'+
     '<div id="chatMsgs" class="chatmsgs"></div>'+
-    '<form id="chatForm" class="chatbar"><input id="chatIn" class="field" placeholder="'+esc(t("a_ph"))+'" autocomplete="off"><button class="btn primary" type="submit"><svg viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg></button></form>'+
+    '<form id="chatForm" class="chatbar"><input id="chatIn" class="field" placeholder="'+esc(t("a_ph"))+'" autocomplete="off">'+(hasSpeech()?'<button class="micbtn" id="micBtn" type="button" title="'+esc(t("mic_title"))+'"><svg viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3"/></svg></button>':'')+'<button class="btn primary" type="submit"><svg viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg></button></form>'+
     '</div>';
   showView("viewChat");renderChat();
   $("chatBack").onclick=function(){showView("viewList");};
@@ -1150,7 +1160,32 @@ function openChat(){
   $("chatClear").onclick=function(){if(CHAT.length&&!confirm(t("a_clear")+"?"))return;CHAT=[];lsSet(LS_CHAT,CHAT);if(INTERVIEW){INTERVIEW.active=false;ivPersist();}renderChat();};
   if($("ivBtn"))$("ivBtn").onclick=function(){if(INTERVIEW&&INTERVIEW.active){ivFinish();}else{ivStart();}var on=INTERVIEW&&INTERVIEW.active;this.className="ivbtn"+(on?" on":"");var sp=this.querySelector("span");if(sp)sp.textContent=on?t("iv_run"):t("iv_start");};
   $("chatForm").addEventListener("submit",function(ev){ev.preventDefault();var v=$("chatIn").value;$("chatIn").value="";chatAsk(v);});
+  if($("micBtn"))$("micBtn").onclick=toggleMic;
   setTimeout(function(){try{$("chatIn").focus();}catch(e){}},50);
+}
+/* ===================== Spracheingabe (Diktat in der App) ===================== */
+function hasSpeech(){return !!(window.SpeechRecognition||window.webkitSpeechRecognition);}
+function speechLang(){return ({de:"de-DE",en:"en-US",pl:"pl-PL",fr:"fr-FR"})[LANG]||"de-DE";}
+var REC=null,RECON=false;
+function toggleMic(){
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){toast(t("mic_no"));return;}
+  if(RECON&&REC){try{REC.stop();}catch(e){}return;}
+  try{
+    REC=new SR();REC.lang=speechLang();REC.interimResults=true;REC.continuous=false;REC.maxAlternatives=1;
+    var inp=$("chatIn");var base=inp?inp.value:"";if(base&&!/\s$/.test(base))base+=" ";
+    var finalAcc="";
+    REC.onstart=function(){RECON=true;if($("micBtn"))$("micBtn").classList.add("on");toast(t("mic_listen"));};
+    REC.onerror=function(e){RECON=false;if($("micBtn"))$("micBtn").classList.remove("on");
+      var er=e&&e.error;if(er==="not-allowed"||er==="service-not-allowed")toast(t("mic_perm"));else if(er!=="aborted"&&er!=="no-speech")toast(t("mic_no"));};
+    REC.onend=function(){RECON=false;if($("micBtn"))$("micBtn").classList.remove("on");if($("chatIn"))$("chatIn").focus();};
+    REC.onresult=function(ev){
+      var intr="";
+      for(var i=ev.resultIndex;i<ev.results.length;i++){var r=ev.results[i];if(r.isFinal)finalAcc+=r[0].transcript;else intr+=r[0].transcript;}
+      if($("chatIn"))$("chatIn").value=base+finalAcc+intr;
+    };
+    REC.start();
+  }catch(e){RECON=false;toast(t("mic_no"));}
 }
 function openDetail(id){
   var a=DB.arts[id];if(!a)return;var tp=typeOf(a.type);
