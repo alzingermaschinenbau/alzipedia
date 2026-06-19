@@ -507,8 +507,9 @@ var I18N9={
 for(var _l9 in I18N9){for(var _k9 in I18N9[_l9])I18N[_l9][_k9]=I18N9[_l9][_k9];}
 I18N.de.whatsnew="Was ist neu?";I18N.en.whatsnew="What's new?";I18N.pl.whatsnew="Co nowego?";I18N.fr.whatsnew="Nouveautés ?";
 I18N.de.changelog="Versionsverlauf";I18N.en.changelog="Version history";I18N.pl.changelog="Historia wersji";I18N.fr.changelog="Historique des versions";
-var APPVER="v41";
+var APPVER="v42";
 var CHANGELOG=[
+ {v:"v42",d:"Bilder im Chat nur noch bei eindeutigem Treffer: Alzi zeigt ein Bild nur, wenn die Frage klar zu genau einem Eintrag passt (z. B. Fehlercode). Keine unpassenden Bilder mehr."},
  {v:"v41",d:"Startseite aufgeräumt: zeigt nur noch die zuletzt aktualisierten Einträge + Button „Alle anzeigen\". Vollständige Listen über die Kacheln/Kategorien oder die Suche."},
  {v:"v40",d:"Aufgeräumte Übersicht: lange Titel/Texte der Einträge werden in der Liste auf 2 Zeilen gekürzt – beim Öffnen sieht man alles. Kein endloser Textblock mehr."},
  {v:"v39",d:"Chat-Eingabefeld wächst mit: bei langem (auch diktiertem) Text siehst du jetzt alles, nicht nur eine Zeile."},
@@ -1146,8 +1147,14 @@ function aiMessages(){
 }
 function kiFail(msg){CHAT=CHAT.filter(function(m){return !m.thinking;});CHAT.push({role:"bot",text:"⚠️ "+msg,err:true,ts:Date.now()});lsSet(LS_CHAT,CHAT);renderChat();}
 function answerImgs(q){
-  var ranked=assistRank(q);
-  for(var i=0;i<ranked.length;i++){var im=ranked[i].a.images;if(im&&im.length)return im.slice(0,3);}
+  // Bild nur zeigen, wenn der BESTE Treffer ein Bild hat UND klar dominiert
+  // (d. h. die Frage zielt eindeutig auf genau diesen Eintrag, z. B. ein Fehlercode).
+  var r=assistRank(q);
+  if(!r.length)return [];
+  var top=r[0];
+  if(!(top.a.images&&top.a.images.length))return [];
+  var second=r.length>1?r[1].s:0;
+  if(top.s>=7&&top.s>=second*1.8)return top.a.images.slice(0,3);
   return [];
 }
 function kiAnswer(q){
