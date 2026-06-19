@@ -72,14 +72,29 @@ Regeln:
 WISSENSBASIS:
 ${context || "(keine passenden Inhalte gefunden)"}`;
 
+    // Optionale Bilder (Schaltplan-Seiten, Fotos) – Opus kann sie "sehen".
+    const images = Array.isArray(body.images) ? body.images : [];
+    const mapped = messages.map((m: any) => ({
+      role: m.role === "assistant" ? "assistant" : "user",
+      content: String(m.content || "") as any,
+    }));
+    if (images.length && mapped.length) {
+      const last = mapped[mapped.length - 1];
+      if (last.role === "user") {
+        const blocks: any[] = images.slice(0, 5).map((im: any) => ({
+          type: "image",
+          source: { type: "base64", media_type: String(im.media_type || "image/jpeg"), data: String(im.data || "") },
+        }));
+        blocks.push({ type: "text", text: String(last.content || "") || "Bitte lies den beigefügten Plan / das Bild und beantworte meine Frage konkret." });
+        last.content = blocks;
+      }
+    }
+
     const resp = await client.messages.create({
       model,
-      max_tokens: 700,
+      max_tokens: images.length ? 1000 : 700,
       system,
-      messages: messages.map((m: any) => ({
-        role: m.role === "assistant" ? "assistant" : "user",
-        content: String(m.content || ""),
-      })),
+      messages: mapped,
     });
 
     const answer = (resp.content || [])
