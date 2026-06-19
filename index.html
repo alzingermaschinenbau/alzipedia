@@ -315,6 +315,17 @@ textarea.field{min-height:120px;resize:vertical;line-height:1.5}
 .lb.show{display:flex}
 .lb img{max-width:100%;max-height:100%;border-radius:8px}
 .lb .x{position:absolute;top:14px;right:16px;color:#fff;font-size:34px;cursor:pointer;line-height:1}
+.verbtn{background:none;border:0;color:#aab;font-size:11px;cursor:pointer;text-decoration:underline;padding:4px}
+.clog{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:85;display:none;align-items:center;justify-content:center;padding:18px}
+.clog.show{display:flex}
+.clogbox{background:var(--card);border-radius:16px;max-width:520px;width:100%;max-height:80vh;overflow:auto;box-shadow:0 14px 50px rgba(0,0,0,.35)}
+.cloghd{position:sticky;top:0;background:var(--card);display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--line)}
+.cloghd b{font-size:16px}
+.cloghd .x{font-size:26px;cursor:pointer;line-height:1;color:var(--muted)}
+.clogrow{display:flex;gap:12px;padding:11px 18px;border-bottom:1px solid var(--line);font-size:14px;line-height:1.45}
+.clogrow:last-child{border-bottom:0}
+.clogv{flex:0 0 64px;font-weight:800;color:var(--red);font-variant-numeric:tabular-nums}
+.clogd{color:var(--ink)}
 
 .note{background:#fff8e1;border:1px solid #f3e3a3;border-radius:11px;padding:12px 14px;font-size:13px;line-height:1.5;color:#6b5a16;margin:10px 0}
 .code{background:#0f172a;color:#cbd5e1;border-radius:10px;padding:12px 14px;font-size:12px;line-height:1.5;overflow-x:auto;white-space:pre;font-family:"IBM Plex Mono",monospace;margin:8px 0}
@@ -381,6 +392,7 @@ hr.s{border:0;border-top:1px solid var(--line);margin:16px 0}
 
 <div class="toast" id="toast"></div>
 <div class="lb" id="lb"><span class="x" id="lbX">×</span><img id="lbImg" src="" alt=""></div>
+<div class="clog" id="clog"><div class="clogbox"><div class="cloghd"><b id="clogTitle">Versionsverlauf</b><span class="x" id="clogX">×</span></div><div id="clogBody"></div></div></div>
 <input type="file" id="imgIn" accept="image/*" multiple style="display:none">
 <input type="file" id="fileIn" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" multiple style="display:none">
 <input type="file" id="csvIn" accept=".csv,text/csv" style="display:none">
@@ -462,12 +474,29 @@ var I18N8={
 };
 for(var _l8 in I18N8){for(var _k8 in I18N8[_l8])I18N[_l8][_k8]=I18N8[_l8][_k8];}
 var I18N9={
- de:{add_img:"Bild",img_added:"Bild hinzugefügt"},
- en:{add_img:"Image",img_added:"Image added"},
- pl:{add_img:"Zdjęcie",img_added:"Dodano zdjęcie"},
- fr:{add_img:"Image",img_added:"Image ajoutée"}
+ de:{add_img:"Bild",img_added:"Bild hinzugefügt",iv_head:"Neue Frage · schon {n} gelernt"},
+ en:{add_img:"Image",img_added:"Image added",iv_head:"New question · {n} learned"},
+ pl:{add_img:"Zdjęcie",img_added:"Dodano zdjęcie",iv_head:"Nowe pytanie · nauczono {n}"},
+ fr:{add_img:"Image",img_added:"Image ajoutée",iv_head:"Nouvelle question · {n} appris"}
 };
 for(var _l9 in I18N9){for(var _k9 in I18N9[_l9])I18N[_l9][_k9]=I18N9[_l9][_k9];}
+I18N.de.whatsnew="Was ist neu?";I18N.en.whatsnew="What's new?";I18N.pl.whatsnew="Co nowego?";I18N.fr.whatsnew="Nouveautés ?";
+I18N.de.changelog="Versionsverlauf";I18N.en.changelog="Version history";I18N.pl.changelog="Historia wersji";I18N.fr.changelog="Historique des versions";
+var APPVER="v35";
+var CHANGELOG=[
+ {v:"v35",d:"Lepton-Training: Alzi stellt jetzt immer NEUE Fragen (KI-generiert, keine Wiederholungen)."},
+ {v:"v34",d:"Bilder im Training & im Chat – z. B. Foto vom Fehlercode-Symbol; Alzi zeigt das Bild in der Antwort."},
+ {v:"v33",d:"Alzi liest abgelegte Dokumente richtig (springt zur passenden Stelle statt Deckblatt); KI-Antworten standardmäßig an; Warnung bei gescannten PDFs."},
+ {v:"v32",d:"iPhone: Statusleiste oben durchgehend rot."},
+ {v:"v31",d:"Auffälliger „Alzi fragen\"-Button in der Kopfzeile."},
+ {v:"v30",d:"Geführtes Lepton-Training (Alzi fragt, du antwortest)."},
+ {v:"v29",d:"Alzi-Training: verbindliche Frage/Antwort beibringen (Experten-Vorrang)."},
+ {v:"v28",d:"Wissensablage in den Einstellungen: Unterlagen hochladen, PDF-Inhalt durchsuchbar."},
+ {v:"v27",d:"Chat leeren-Funktion."},
+ {v:"v23–v26",d:"Echte KI „Alzi\" (Opus 4.8) mit Rückfragen, Lufthansa-Stil-Chat, Avatar & Uhrzeit."},
+ {v:"v22",d:"PDF-Volltextsuche (Betriebsanleitungen durchsuchbar)."},
+ {v:"bis v21",d:"Grundlagen: Login über Supabase, Maschinen-Tagebuch, Dokumente, QR-Codes, Mehrsprachigkeit (DE/EN/PL/FR), CSV-Import."}
+];
 var LANG=lsGet(LS_LANG,"de");if(!I18N[LANG])LANG="de";
 function t(k,vars){var s=(I18N[LANG]&&I18N[LANG][k])||I18N.de[k]||k;if(vars)for(var v in vars)s=s.replace("{"+v+"}",vars[v]);return s;}
 function typeLabel(tp){var k="t_"+(tp&&tp.id?tp.id:tp);return (I18N[LANG]&&I18N[LANG][k])||(tp&&tp.label)||k;}
@@ -917,23 +946,64 @@ var LEPTON_Q=[
  {c:"Sicherheit",q:"Lepton 5100: Welche Sicherheitseinrichtungen (Not-Aus, Schutzgitter) gibt es und worauf muss der Bediener achten?"},
  {c:"Sonstiges",q:"Lepton 5100: Gibt es Besonderheiten, Tricks oder häufige Bedienfehler, die jeder Techniker kennen sollte?"}
 ];
-var INTERVIEW=lsGet(LS_IV,{active:false,i:0,saved:0});
-function ivPersist(){lsSet(LS_IV,{active:INTERVIEW.active,i:INTERVIEW.i,saved:INTERVIEW.saved});}
+var INTERVIEW=lsGet(LS_IV,{active:false,saved:0,asked:[],cur:""});
+if(!INTERVIEW.asked)INTERVIEW.asked=[];
+function ivPersist(){lsSet(LS_IV,{active:INTERVIEW.active,saved:INTERVIEW.saved,asked:(INTERVIEW.asked||[]).slice(-120),cur:INTERVIEW.cur||""});}
 function ivStart(){
-  INTERVIEW={active:true,i:(INTERVIEW&&INTERVIEW.i&&INTERVIEW.i<LEPTON_Q.length?INTERVIEW.i:0),saved:0};ivPersist();
-  CHAT.push({role:"bot",text:(INTERVIEW.i>0?t("iv_resume")+"\n\n":"")+t("iv_intro"),ts:Date.now()});
-  ivAskNext("");
+  var asked=(INTERVIEW&&INTERVIEW.asked)||[];
+  INTERVIEW={active:true,saved:0,asked:asked,cur:""};ivPersist();
+  CHAT.push({role:"bot",text:(asked.length?t("iv_resume")+"\n\n":"")+t("iv_intro"),ts:Date.now()});
+  ivGenNext();
 }
-function ivAskNext(prefix){
-  if(INTERVIEW.i>=LEPTON_Q.length){ivFinish();return;}
-  var item=LEPTON_Q[INTERVIEW.i];
-  var head="**"+item.c+" · "+(INTERVIEW.i+1)+"/"+LEPTON_Q.length+"**\n";
-  CHAT.push({role:"bot",text:(prefix||"")+head+item.q,chips:[t("iv_skip"),t("iv_done")],iv:true,ts:Date.now()});
+/* Liste der bereits abgedeckten Themen (geprüfte Antworten + schon gestellte Fragen) */
+function ivCovered(){
+  var arr=trainDocs().map(function(a){return a.title||"";}).concat(INTERVIEW.asked||[]);
+  var seen={},out=[];
+  for(var i=arr.length-1;i>=0&&out.length<80;i--){var k=(arr[i]||"").trim();if(!k)continue;var lk=k.toLowerCase();if(seen[lk])continue;seen[lk]=1;out.unshift(k);}
+  return out;
+}
+function ivStaticQuestion(){
+  var cov={};ivCovered().forEach(function(s){cov[s.toLowerCase()]=1;});
+  for(var i=0;i<LEPTON_Q.length;i++){var q=LEPTON_Q[i].q;if(!cov[q.toLowerCase()])return q;}
+  return "";
+}
+function ivKiQuestion(){
+  var ctx=ivCovered().map(function(s){return "- "+s;}).join("\n");
+  return ensureToken().then(function(){
+    return fetch(sbOrigin()+"/functions/v1/alzi-ki",{method:"POST",headers:{apikey:SB.key,Authorization:"Bearer "+sbBearer(),"Content-Type":"application/json"},
+      body:JSON.stringify({mode:"frage",messages:[{role:"user",content:"Bitte stelle die nächste, noch nicht abgedeckte Fachfrage zum Lepton 5100."}],context:ctx,model:KIMODEL,lang:LANG})});
+  }).then(function(r){return r.json();}).then(function(d){
+    if(!d||!d.answer)throw new Error("leer");
+    var raw=String(d.answer).replace(/VORSCHL[ÄA]GE\s*:[^\n]*$/i,"").trim();
+    var lines=raw.split(/\n+/).map(function(s){return s.trim();}).filter(Boolean);
+    var q="";for(var i=0;i<lines.length;i++){if(/\?\s*$/.test(lines[i])){q=lines[i];break;}}
+    if(!q)q=lines[lines.length-1]||raw;
+    q=q.replace(/^[-•*\d\.\)\s]+/,"").trim();
+    if(!q)throw new Error("leer");
+    return q;
+  });
+}
+function ivShow(q){
+  CHAT=CHAT.filter(function(m){return !m.thinking;});
+  INTERVIEW.cur=q;INTERVIEW.asked=(INTERVIEW.asked||[]).concat([q]);ivPersist();
+  var head="**"+t("iv_head",{n:INTERVIEW.saved})+"**\n";
+  CHAT.push({role:"bot",text:head+q,chips:[t("iv_skip"),t("iv_done")],iv:true,ts:Date.now()});
   if(CHAT.length>80)CHAT=CHAT.slice(-80);
   lsSet(LS_CHAT,CHAT);renderChat();
 }
+function ivGenNext(){
+  CHAT.push({role:"bot",thinking:true,iv:true});lsSet(LS_CHAT,CHAT);renderChat();
+  if(!sbReady()){var sq=ivStaticQuestion();CHAT=CHAT.filter(function(m){return !m.thinking;});if(sq)ivShow(sq);else ivFinish();return;}
+  ivKiQuestion().then(function(q){ivShow(q);}).catch(function(){
+    CHAT=CHAT.filter(function(m){return !m.thinking;});
+    var sq=ivStaticQuestion();
+    if(sq)ivShow(sq);
+    else{CHAT.push({role:"bot",text:"⚠️ "+t("ki_err"),err:true,ts:Date.now()});lsSet(LS_CHAT,CHAT);renderChat();}
+  });
+}
 function ivFinish(){
-  INTERVIEW.active=false;ivPersist();
+  INTERVIEW.active=false;INTERVIEW.cur="";ivPersist();
+  CHAT=CHAT.filter(function(m){return !m.thinking;});
   CHAT.push({role:"bot",text:t("iv_finish",{n:INTERVIEW.saved}),ts:Date.now()});
   lsSet(LS_CHAT,CHAT);renderChat();renderTabs();renderList();
 }
@@ -941,10 +1011,9 @@ function ivAnswer(ans){
   var low=(ans||"").trim().toLowerCase();
   if(low===t("iv_done").toLowerCase()||/^(fertig|stop|stopp|beenden|ende|schluss|done|finish|gotowe|koniec|termin[ée]|fini)$/.test(low)){ivFinish();return;}
   var skip=(low===t("iv_skip").toLowerCase()||/^(überspringen|skip|weiter|next|pomi[ńn]|dalej|passer|suivant|sauter)$/.test(low));
-  var item=LEPTON_Q[INTERVIEW.i];var pre="";
-  if(!skip&&item){saveTraining(item.q,ans);INTERVIEW.saved++;pre="✓ "+t("iv_saved")+"\n\n";}
-  INTERVIEW.i++;ivPersist();
-  ivAskNext(pre);
+  if(!skip&&INTERVIEW.cur){saveTraining(INTERVIEW.cur,ans);INTERVIEW.saved++;toast(t("iv_saved"));}
+  INTERVIEW.cur="";ivPersist();
+  ivGenNext();
 }
 function chatAsk(q){
   q=(q||"").trim();if(!q)return;
@@ -1517,7 +1586,7 @@ function openSettings(){
     '<div id="trainList" style="margin-top:10px">'+trainRows()+'</div>'):'')+
     '<hr class="s">'+
     '<button class="btn danger block" id="logoutBtn">'+esc(t("logout"))+'</button>'+
-    '<div style="text-align:center;color:#aab;font-size:11px;margin-top:14px">Alzipedia '+"v34"+(isAdmin()?" · Admin":"")+'</div>'+
+    '<div style="text-align:center;margin-top:14px"><button class="verbtn" id="verBtn">Alzipedia '+APPVER+(isAdmin()?" · Admin":"")+' · '+esc(t("whatsnew"))+'</button></div>'+
     '</div>';
   $("viewSet").innerHTML=h;showView("viewSet");setConn(sbReady()?(navigator.onLine?"ok":"off"):"");
   $("setBack").onclick=function(){showView("viewList");};
@@ -1530,13 +1599,21 @@ function openSettings(){
   };
   if($("sbClear"))$("sbClear").onclick=function(){if(!confirm("Verbindung trennen und abmelden?"))return;authForceLogout();SB={url:"",key:""};lsSet(LS_SB,SB);location.reload();};
   $("logoutBtn").onclick=function(){authLogout().then(function(){location.reload();});};
+  if($("verBtn"))$("verBtn").onclick=openChangelog;
   bindWissen();bindTraining();
+}
+function openChangelog(){
+  if($("clogTitle"))$("clogTitle").textContent=t("changelog");
+  $("clogBody").innerHTML=CHANGELOG.map(function(c){return '<div class="clogrow"><span class="clogv">'+esc(c.v)+'</span><span class="clogd">'+esc(c.d)+'</span></div>';}).join("");
+  $("clog").classList.add("show");
 }
 
 /* ===================== Lightbox ===================== */
 function lightbox(u){$("lbImg").src=u;$("lb").classList.add("show");}
 $("lbX").onclick=function(){$("lb").classList.remove("show");$("lbImg").src="";};
 $("lb").onclick=function(e){if(e.target===this){this.classList.remove("show");$("lbImg").src="";}};
+$("clogX").onclick=function(){$("clog").classList.remove("show");};
+$("clog").onclick=function(e){if(e.target===this)this.classList.remove("show");};
 
 /* ===================== Toast ===================== */
 var _tt;
