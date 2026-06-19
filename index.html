@@ -507,8 +507,9 @@ var I18N9={
 for(var _l9 in I18N9){for(var _k9 in I18N9[_l9])I18N[_l9][_k9]=I18N9[_l9][_k9];}
 I18N.de.whatsnew="Was ist neu?";I18N.en.whatsnew="What's new?";I18N.pl.whatsnew="Co nowego?";I18N.fr.whatsnew="Nouveautés ?";
 I18N.de.changelog="Versionsverlauf";I18N.en.changelog="Version history";I18N.pl.changelog="Historia wersji";I18N.fr.changelog="Historique des versions";
-var APPVER="v42";
+var APPVER="v43";
 var CHANGELOG=[
+ {v:"v43",d:"Alzi antwortet kürzer: knapp auf den Punkt (wenige Stichpunkte/Sätze) statt langer Texte."},
  {v:"v42",d:"Bilder im Chat nur noch bei eindeutigem Treffer: Alzi zeigt ein Bild nur, wenn die Frage klar zu genau einem Eintrag passt (z. B. Fehlercode). Keine unpassenden Bilder mehr."},
  {v:"v41",d:"Startseite aufgeräumt: zeigt nur noch die zuletzt aktualisierten Einträge + Button „Alle anzeigen\". Vollständige Listen über die Kacheln/Kategorien oder die Suche."},
  {v:"v40",d:"Aufgeräumte Übersicht: lange Titel/Texte der Einträge werden in der Liste auf 2 Zeilen gekürzt – beim Öffnen sieht man alles. Kein endloser Textblock mehr."},
@@ -1104,6 +1105,7 @@ function chatAsk(q){
     lsSet(LS_CHAT,CHAT);renderChat();
   }
 }
+var ANSWER_STYLE="ANTWORTSTIL (sehr wichtig): Antworte so KURZ wie möglich – nur das Wesentliche. Höchstens 4–6 knappe Stichpunkte ODER 2–3 kurze Sätze. KEINE Einleitung, KEINE Wiederholung der Frage, kein Smalltalk, keine Zusammenfassung am Ende. Nenne nur die direkt relevanten Schritte/Werte. Lieber nachfragen als lange ausholen.";
 function kiContext(q){
   var terms=aTerms(q);
   return assistRank(q).map(function(x){var a=x.a;
@@ -1160,7 +1162,7 @@ function answerImgs(q){
 function kiAnswer(q){
   if(!sbReady()){kiFail(t("conn_no"));return;}
   ensureToken().then(function(){
-    return fetch(sbOrigin()+"/functions/v1/alzi-ki",{method:"POST",headers:{apikey:SB.key,Authorization:"Bearer "+sbBearer(),"Content-Type":"application/json"},body:JSON.stringify({messages:aiMessages(),context:kiContext(q),model:KIMODEL,lang:LANG})});
+    return fetch(sbOrigin()+"/functions/v1/alzi-ki",{method:"POST",headers:{apikey:SB.key,Authorization:"Bearer "+sbBearer(),"Content-Type":"application/json"},body:JSON.stringify({messages:aiMessages(),context:ANSWER_STYLE+"\n\n"+kiContext(q),model:KIMODEL,lang:LANG})});
   }).then(function(r){return r.json().catch(function(){return {error:"Antwort unlesbar"};});})
    .then(function(d){
      CHAT=CHAT.filter(function(m){return !m.thinking;});
