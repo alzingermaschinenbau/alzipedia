@@ -256,8 +256,9 @@ textarea.field{min-height:120px;resize:vertical;line-height:1.5}
 .cres .crt{font-weight:800;margin:6px 0 3px}
 .cres .cra{font-size:13px;color:var(--ink)}
 .cres .cro{font-size:12px;font-weight:700;color:var(--red);margin-top:6px}
-.chatbar{display:flex;gap:8px;align-items:center;border-top:1px solid var(--line);padding-top:10px;position:sticky;bottom:0;background:var(--card)}
+.chatbar{display:flex;gap:8px;align-items:flex-end;border-top:1px solid var(--line);padding-top:10px;position:sticky;bottom:0;background:var(--card)}
 .chatbar .field{flex:1;margin:0}
+.chatbar textarea.field{resize:none;line-height:1.4;max-height:160px;overflow-y:auto;min-height:44px}
 .chatbar .btn{padding:11px 14px}
 .chatbar .btn svg{margin:0}
 .micbtn{flex:0 0 auto;width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:#fff;color:var(--red);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
@@ -499,8 +500,9 @@ var I18N9={
 for(var _l9 in I18N9){for(var _k9 in I18N9[_l9])I18N[_l9][_k9]=I18N9[_l9][_k9];}
 I18N.de.whatsnew="Was ist neu?";I18N.en.whatsnew="What's new?";I18N.pl.whatsnew="Co nowego?";I18N.fr.whatsnew="Nouveautés ?";
 I18N.de.changelog="Versionsverlauf";I18N.en.changelog="Version history";I18N.pl.changelog="Historia wersji";I18N.fr.changelog="Historique des versions";
-var APPVER="v38";
+var APPVER="v39";
 var CHANGELOG=[
+ {v:"v39",d:"Chat-Eingabefeld wächst mit: bei langem (auch diktiertem) Text siehst du jetzt alles, nicht nur eine Zeile."},
  {v:"v38",d:"Mikrofon-Button im Chat: in Alzi sprechen statt tippen (Spracheingabe in der App-Sprache). Auf iPhone-Homescreen evtl. eingeschränkt – dann Tastatur-Mikrofon nutzen."},
  {v:"v37",d:"Button „Dokumente lernen\": liest den Text aller PDFs in der Wissensablage ein (auch Altbestand), damit Alzi den Inhalt kennt – vor dem Training einmal ausführen."},
  {v:"v36",d:"Training fragt nur noch nach LÜCKEN: Alzi kennt jetzt den Inhalt der Wissensablage und fragt nicht mehr nach Dingen, die schon in der Betriebsanleitung/Serviceliste stehen."},
@@ -1152,17 +1154,23 @@ function openChat(){
     '<div class="detail chatpane">'+
     '<div class="chathd"><h2 style="margin:0">'+esc(t("a_title"))+'</h2><div class="chacts">'+(isAdmin()?'<button class="ivbtn'+(INTERVIEW&&INTERVIEW.active?" on":"")+'" id="ivBtn" title="'+esc(t("iv_start"))+'"><svg viewBox="0 0 24 24"><path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1 2.7 3 6 3s6-2 6-3v-5"/></svg><span>'+esc(INTERVIEW&&INTERVIEW.active?t("iv_run"):t("iv_start"))+'</span></button>':'')+'<button class="kitog'+(KIMODE?" on":"")+'" id="kiTog">'+esc(KIMODE?t("ki_on"):t("ki_off"))+'</button><button class="chatdel" id="chatClear" title="'+esc(t("a_clear"))+'"><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg></button></div></div>'+
     '<div id="chatMsgs" class="chatmsgs"></div>'+
-    '<form id="chatForm" class="chatbar"><input id="chatIn" class="field" placeholder="'+esc(t("a_ph"))+'" autocomplete="off">'+(hasSpeech()?'<button class="micbtn" id="micBtn" type="button" title="'+esc(t("mic_title"))+'"><svg viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3"/></svg></button>':'')+'<button class="btn primary" type="submit"><svg viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg></button></form>'+
+    '<form id="chatForm" class="chatbar"><textarea id="chatIn" class="field" rows="1" placeholder="'+esc(t("a_ph"))+'" autocomplete="off" autocapitalize="sentences"></textarea>'+(hasSpeech()?'<button class="micbtn" id="micBtn" type="button" title="'+esc(t("mic_title"))+'"><svg viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3"/></svg></button>':'')+'<button class="btn primary" type="submit"><svg viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg></button></form>'+
     '</div>';
   showView("viewChat");renderChat();
   $("chatBack").onclick=function(){showView("viewList");};
   $("kiTog").onclick=function(){KIMODE=!KIMODE;lsSet(LS_KIMODE,KIMODE);this.className="kitog"+(KIMODE?" on":"");this.textContent=KIMODE?t("ki_on"):t("ki_off");if(KIMODE)toast(t("ki_hint"));};
   $("chatClear").onclick=function(){if(CHAT.length&&!confirm(t("a_clear")+"?"))return;CHAT=[];lsSet(LS_CHAT,CHAT);if(INTERVIEW){INTERVIEW.active=false;ivPersist();}renderChat();};
   if($("ivBtn"))$("ivBtn").onclick=function(){if(INTERVIEW&&INTERVIEW.active){ivFinish();}else{ivStart();}var on=INTERVIEW&&INTERVIEW.active;this.className="ivbtn"+(on?" on":"");var sp=this.querySelector("span");if(sp)sp.textContent=on?t("iv_run"):t("iv_start");};
-  $("chatForm").addEventListener("submit",function(ev){ev.preventDefault();var v=$("chatIn").value;$("chatIn").value="";chatAsk(v);});
+  $("chatForm").addEventListener("submit",function(ev){ev.preventDefault();var v=$("chatIn").value;$("chatIn").value="";autoGrow($("chatIn"));chatAsk(v);});
   if($("micBtn"))$("micBtn").onclick=toggleMic;
+  var ci=$("chatIn");
+  if(ci){
+    ci.addEventListener("input",function(){autoGrow(ci);});
+    ci.addEventListener("keydown",function(ev){if(ev.key==="Enter"&&!ev.shiftKey){ev.preventDefault();var v=ci.value;ci.value="";autoGrow(ci);chatAsk(v);}});
+  }
   setTimeout(function(){try{$("chatIn").focus();}catch(e){}},50);
 }
+function autoGrow(el){if(!el)return;el.style.height="auto";el.style.height=Math.min(el.scrollHeight,160)+"px";}
 /* ===================== Spracheingabe (Diktat in der App) ===================== */
 function hasSpeech(){return !!(window.SpeechRecognition||window.webkitSpeechRecognition);}
 function speechLang(){return ({de:"de-DE",en:"en-US",pl:"pl-PL",fr:"fr-FR"})[LANG]||"de-DE";}
@@ -1182,7 +1190,7 @@ function toggleMic(){
     REC.onresult=function(ev){
       var intr="";
       for(var i=ev.resultIndex;i<ev.results.length;i++){var r=ev.results[i];if(r.isFinal)finalAcc+=r[0].transcript;else intr+=r[0].transcript;}
-      if($("chatIn"))$("chatIn").value=base+finalAcc+intr;
+      if($("chatIn")){$("chatIn").value=base+finalAcc+intr;autoGrow($("chatIn"));}
     };
     REC.start();
   }catch(e){RECON=false;toast(t("mic_no"));}
