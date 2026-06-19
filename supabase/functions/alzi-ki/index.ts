@@ -33,15 +33,15 @@ Deno.serve(async (req) => {
     if (mode === "frage") {
       const qsystem =
 `Du baust gemeinsam mit einem Maschinen-Experten eine Wissensdatenbank zur Alzinger Siebmaschine Lepton 5100 auf.
-Deine Aufgabe: Stelle GENAU EINE neue, konkrete Fachfrage zum Lepton 5100, deren Antwort die Datenbank noch nicht enthält.
+Deine Aufgabe: Stelle GENAU EINE neue, konkrete Fachfrage zum Lepton 5100, deren Antwort NICHT bereits im unten bereitgestellten Wissen steht.
 Regeln:
-- Die Frage muss sich klar von den bereits abgedeckten/gestellten unterscheiden (Liste unten) – KEINE Wiederholungen, auch nicht sinngemäß.
-- Decke nach und nach ALLE Bereiche ab: Inbetriebnahme, Bedienung/Terminal, Funkfernbedienung, Siebdeck-Einstellungen (Neigung, Drehzahl, Spaltweite), Aufgabegut/Material, Hydraulik & Öle, Elektrik/Frequenzumrichter (SEW), CAN-Bus, Display-/Fehlercodes, Wartung & Intervalle, Schmierstellen, Verschleißteile, Reinigung, Störungssuche, Absaugung/Windsichter, Magnetabscheider, Sicherheit/Not-Aus, Transport/Straßenfahrt, Ersatzteile.
+- Unten findest du, was BEREITS dokumentiert (Betriebsanleitung/Serviceliste/Datenblätter) bzw. schon gelernt ist. Frage NICHT nach Dingen, die dort schon stehen – auch nicht sinngemäß oder umformuliert.
+- Ziel sind LÜCKEN: Erfahrungswissen aus der Praxis, Einstellungen für bestimmte Materialien/Situationen, undokumentierte Tricks/Kniffe, häufige Bedienfehler – Wissen, das in keiner Anleitung steht.
 - Frag praxisnah und beantwortbar – ein konkretes Detail pro Frage.
 - Gib NUR die Frage aus: kein Vorwort, keine Nummerierung, keine Erklärung, KEINE "VORSCHLÄGE"-Zeile.
 - Sprache: ${lang}.
 
-BEREITS ABGEDECKT/GESTELLT:
+BEREITS VORHANDENES WISSEN (nicht danach fragen):
 ${context || "(noch nichts)"}`;
       const qr = await client.messages.create({
         model,

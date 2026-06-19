@@ -482,8 +482,9 @@ var I18N9={
 for(var _l9 in I18N9){for(var _k9 in I18N9[_l9])I18N[_l9][_k9]=I18N9[_l9][_k9];}
 I18N.de.whatsnew="Was ist neu?";I18N.en.whatsnew="What's new?";I18N.pl.whatsnew="Co nowego?";I18N.fr.whatsnew="Nouveautés ?";
 I18N.de.changelog="Versionsverlauf";I18N.en.changelog="Version history";I18N.pl.changelog="Historia wersji";I18N.fr.changelog="Historique des versions";
-var APPVER="v35";
+var APPVER="v36";
 var CHANGELOG=[
+ {v:"v36",d:"Training fragt nur noch nach LÜCKEN: Alzi kennt jetzt den Inhalt der Wissensablage und fragt nicht mehr nach Dingen, die schon in der Betriebsanleitung/Serviceliste stehen."},
  {v:"v35",d:"Lepton-Training: Alzi stellt jetzt immer NEUE Fragen (KI-generiert, keine Wiederholungen)."},
  {v:"v34",d:"Bilder im Training & im Chat – z. B. Foto vom Fehlercode-Symbol; Alzi zeigt das Bild in der Antwort."},
  {v:"v33",d:"Alzi liest abgelegte Dokumente richtig (springt zur passenden Stelle statt Deckblatt); KI-Antworten standardmäßig an; Warnung bei gescannten PDFs."},
@@ -967,8 +968,41 @@ function ivStaticQuestion(){
   for(var i=0;i<LEPTON_Q.length;i++){var q=LEPTON_Q[i].q;if(!cov[q.toLowerCase()])return q;}
   return "";
 }
+/* repräsentative Stichproben quer durch einen langen Text (für die Wissens-Übersicht) */
+function sampleText(text,total,wins){
+  text=String(text||"").replace(/\s+/g," ").trim();
+  if(text.length<=total)return text;
+  wins=wins||6;var win=Math.max(300,Math.floor(total/wins)),step=Math.max(1,Math.floor((text.length-win)/(wins-1))),out=[];
+  for(var i=0;i<wins;i++){out.push(text.substr(i*step,win));}
+  return out.join(" … ");
+}
+/* Übersicht dessen, was BEREITS in der Wissensablage (Dokumente) + im Training steht.
+   Damit Alzi beim Fragen-Generieren nur noch nach echten LÜCKEN fragt. */
+function kiKnowledgeDigest(){
+  var head="WICHTIG: Der folgende Inhalt ist BEREITS dokumentiert (Betriebsanleitung / Serviceliste / Datenblätter) bzw. schon gelernt. "+
+    "Stelle KEINE Frage, deren Antwort hier bereits steht – auch nicht sinngemäß. "+
+    "Frage gezielt nach echten LÜCKEN: Erfahrungswerte aus der Praxis, Einstellungen für bestimmte Materialien/Situationen, "+
+    "undokumentierte Tricks/Kniffe, häufige Bedienfehler – also Wissen, das in keiner Anleitung steht.\n\n";
+  var parts=[],used=0,cap=42000;
+  artsArr().forEach(function(a){
+    if(used>=cap)return;
+    var txt=(a.files||[]).map(function(f){return f.text||"";}).join("\n").trim();
+    if(a.dbl&&a.dbl.length)txt+=" "+dblText(a);
+    if(!txt)return;
+    var room=Math.min(9000,cap-used);
+    var chunk="### DOKUMENT: "+(a.title||"")+"\n"+sampleText(txt,room,7);
+    parts.push(chunk);used+=chunk.length;
+  });
+  var docs=parts.length?parts.join("\n\n"):"(noch keine durchsuchbaren Dokumente in der Wissensablage)";
+  var learned=trainDocs().map(function(a){return "- "+(a.title||"");});
+  var asked=(INTERVIEW.asked||[]).slice(-60).map(function(q){return "- "+q;});
+  var extra="";
+  if(learned.length)extra+="\n\nSCHON GELERNT (nicht erneut fragen):\n"+learned.join("\n");
+  if(asked.length)extra+="\n\nSCHON GEFRAGT (nicht wiederholen):\n"+asked.join("\n");
+  return head+docs+extra;
+}
 function ivKiQuestion(){
-  var ctx=ivCovered().map(function(s){return "- "+s;}).join("\n");
+  var ctx=kiKnowledgeDigest();
   return ensureToken().then(function(){
     return fetch(sbOrigin()+"/functions/v1/alzi-ki",{method:"POST",headers:{apikey:SB.key,Authorization:"Bearer "+sbBearer(),"Content-Type":"application/json"},
       body:JSON.stringify({mode:"frage",messages:[{role:"user",content:"Bitte stelle die nächste, noch nicht abgedeckte Fachfrage zum Lepton 5100."}],context:ctx,model:KIMODEL,lang:LANG})});
