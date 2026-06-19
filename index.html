@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
 <title>Alzipedia · Service-Wissen Lepton 5100</title>
 <meta name="theme-color" content="#c00000">
 <link rel="manifest" href="manifest.webmanifest">
@@ -206,7 +206,9 @@ textarea.field{min-height:120px;resize:vertical;line-height:1.5}
 .langrow{display:flex;gap:8px;flex-wrap:wrap}
 .langbtn{border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 14px;font-size:14px;font-weight:700;color:var(--ink);cursor:pointer}
 .langbtn.active{background:var(--red);border-color:var(--red);color:#fff}
-.chatpane{display:flex;flex-direction:column;min-height:70vh}
+.chatpane{display:flex;flex-direction:column;min-height:0}
+body.chatopen{overflow:hidden}
+body.chatopen .wrap{padding-bottom:0}
 .chathd{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .chacts{display:flex;align-items:center;gap:8px;flex:0 0 auto}
 .chatdel{border:1px solid var(--line);background:#fff;border-radius:10px;width:40px;height:40px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:#c00000;flex:0 0 auto}
@@ -224,7 +226,7 @@ textarea.field{min-height:120px;resize:vertical;line-height:1.5}
 .typing i{width:7px;height:7px;border-radius:50%;background:var(--muted);opacity:.4;animation:tdot 1s infinite}
 .typing i:nth-child(2){animation-delay:.2s}.typing i:nth-child(3){animation-delay:.4s}
 @keyframes tdot{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:.9;transform:translateY(-3px)}}
-.chatmsgs{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:4px 0 12px;min-height:50vh}
+.chatmsgs{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;display:flex;flex-direction:column;gap:10px;padding:4px 0 12px;min-height:0}
 .cintro{color:var(--muted);font-size:14px;text-align:center;padding:24px 10px}
 .cwrap{display:flex;flex-direction:column;align-items:flex-start;gap:6px;max-width:92%;align-self:flex-start}
 .bname{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:800;color:var(--ink);margin:2px 0 1px}
@@ -507,8 +509,9 @@ var I18N9={
 for(var _l9 in I18N9){for(var _k9 in I18N9[_l9])I18N[_l9][_k9]=I18N9[_l9][_k9];}
 I18N.de.whatsnew="Was ist neu?";I18N.en.whatsnew="What's new?";I18N.pl.whatsnew="Co nowego?";I18N.fr.whatsnew="Nouveautés ?";
 I18N.de.changelog="Versionsverlauf";I18N.en.changelog="Version history";I18N.pl.changelog="Historia wersji";I18N.fr.changelog="Historique des versions";
-var APPVER="v43";
+var APPVER="v44";
 var CHANGELOG=[
+ {v:"v44",d:"Chat am Handy: Eingabezeile bleibt immer sichtbar – nur die Nachrichten scrollen, kein Hochscrollen mehr (auch bei offener Tastatur)."},
  {v:"v43",d:"Alzi antwortet kürzer: knapp auf den Punkt (wenige Stichpunkte/Sätze) statt langer Texte."},
  {v:"v42",d:"Bilder im Chat nur noch bei eindeutigem Treffer: Alzi zeigt ein Bild nur, wenn die Frage klar zu genau einem Eintrag passt (z. B. Fehlercode). Keine unpassenden Bilder mehr."},
  {v:"v41",d:"Startseite aufgeräumt: zeigt nur noch die zuletzt aktualisierten Einträge + Button „Alle anzeigen\". Vollständige Listen über die Kacheln/Kategorien oder die Suche."},
@@ -847,7 +850,19 @@ function showView(name){
   ["viewList","viewDetail","viewEdit","viewSet","viewChat"].forEach(function(v){$(v).classList.add("hidden");});
   $(name).classList.remove("hidden");
   $("fab").style.display=(name==="viewList")?"flex":"none";
+  document.body.classList.toggle("chatopen",name==="viewChat");
   window.scrollTo(0,0);
+  if(name==="viewChat")sizeChat();
+}
+function sizeChat(){
+  var vc=$("viewChat");if(!vc||vc.classList.contains("hidden"))return;
+  var pane=vc.querySelector(".chatpane");if(!pane)return;
+  var top=pane.getBoundingClientRect().top;
+  var vv=window.visualViewport;
+  var visibleBottom=vv?(vv.offsetTop+vv.height):window.innerHeight;
+  var h=visibleBottom-top-8;if(h<220)h=220;
+  pane.style.height=h+"px";
+  var box=$("chatMsgs");if(box)box.scrollTop=box.scrollHeight;
 }
 
 /* ===================== Assistent (kostenlose Suche über eigene DB) ===================== */
@@ -1190,10 +1205,12 @@ function openChat(){
   if($("micBtn"))$("micBtn").onclick=toggleMic;
   var ci=$("chatIn");
   if(ci){
-    ci.addEventListener("input",function(){autoGrow(ci);});
+    ci.addEventListener("input",function(){autoGrow(ci);sizeChat();});
     ci.addEventListener("keydown",function(ev){if(ev.key==="Enter"&&!ev.shiftKey){ev.preventDefault();var v=ci.value;ci.value="";autoGrow(ci);chatAsk(v);}});
+    ci.addEventListener("focus",function(){setTimeout(sizeChat,250);});
+    ci.addEventListener("blur",function(){setTimeout(sizeChat,250);});
   }
-  setTimeout(function(){try{$("chatIn").focus();}catch(e){}},50);
+  setTimeout(function(){sizeChat();try{$("chatIn").focus();}catch(e){}},60);
 }
 function autoGrow(el){if(!el)return;el.style.height="auto";el.style.height=Math.min(el.scrollHeight,160)+"px";}
 /* ===================== Spracheingabe (Diktat in der App) ===================== */
@@ -1760,6 +1777,9 @@ $("lbX").onclick=function(){$("lb").classList.remove("show");$("lbImg").src="";}
 $("lb").onclick=function(e){if(e.target===this){this.classList.remove("show");$("lbImg").src="";}};
 $("clogX").onclick=function(){$("clog").classList.remove("show");};
 $("clog").onclick=function(e){if(e.target===this)this.classList.remove("show");};
+if(window.visualViewport){window.visualViewport.addEventListener("resize",sizeChat);window.visualViewport.addEventListener("scroll",sizeChat);}
+window.addEventListener("resize",sizeChat);
+window.addEventListener("orientationchange",function(){setTimeout(sizeChat,300);});
 
 /* ===================== Toast ===================== */
 var _tt;
