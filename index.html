@@ -102,7 +102,7 @@ header.top{position:sticky;top:0;z-index:30;background:linear-gradient(135deg,va
 .card:active{transform:scale(.995)}
 .card:hover{box-shadow:0 4px 14px rgba(0,0,0,.08)}
 .card .badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;color:#fff}
-.card h3{margin:8px 0 4px;font-size:16px;font-weight:700;line-height:1.25;overflow-wrap:anywhere}
+.card h3{margin:8px 0 4px;font-size:16px;font-weight:700;line-height:1.25;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .card .snip{font-size:13px;color:var(--muted);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .card .meta{font-size:11px;color:#9aa0a8;margin-top:8px;display:flex;gap:10px;flex-wrap:wrap}
 .taglist{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
@@ -500,8 +500,9 @@ var I18N9={
 for(var _l9 in I18N9){for(var _k9 in I18N9[_l9])I18N[_l9][_k9]=I18N9[_l9][_k9];}
 I18N.de.whatsnew="Was ist neu?";I18N.en.whatsnew="What's new?";I18N.pl.whatsnew="Co nowego?";I18N.fr.whatsnew="Nouveautés ?";
 I18N.de.changelog="Versionsverlauf";I18N.en.changelog="Version history";I18N.pl.changelog="Historia wersji";I18N.fr.changelog="Historique des versions";
-var APPVER="v39";
+var APPVER="v40";
 var CHANGELOG=[
+ {v:"v40",d:"Aufgeräumte Übersicht: lange Titel/Texte der Einträge werden in der Liste auf 2 Zeilen gekürzt – beim Öffnen sieht man alles. Kein endloser Textblock mehr."},
  {v:"v39",d:"Chat-Eingabefeld wächst mit: bei langem (auch diktiertem) Text siehst du jetzt alles, nicht nur eine Zeile."},
  {v:"v38",d:"Mikrofon-Button im Chat: in Alzi sprechen statt tippen (Spracheingabe in der App-Sprache). Auf iPhone-Homescreen evtl. eingeschränkt – dann Tastatur-Mikrofon nutzen."},
  {v:"v37",d:"Button „Dokumente lernen\": liest den Text aller PDFs in der Wissensablage ein (auch Altbestand), damit Alzi den Inhalt kennt – vor dem Training einmal ausführen."},
