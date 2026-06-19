@@ -23,10 +23,35 @@ Deno.serve(async (req) => {
     const messages = Array.isArray(body.messages) ? body.messages : [];
     const context = String(body.context || "");
     const lang = String(body.lang || "de");
+    const mode = String(body.mode || "answer");
     let model = String(body.model || "claude-opus-4-8");
     if (!ALLOWED.includes(model)) model = "claude-opus-4-8";
 
     const client = new Anthropic({ apiKey: key });
+
+    // Trainingsmodus: EINE neue, noch nicht abgedeckte Fachfrage generieren.
+    if (mode === "frage") {
+      const qsystem =
+`Du baust gemeinsam mit einem Maschinen-Experten eine Wissensdatenbank zur Alzinger Siebmaschine Lepton 5100 auf.
+Deine Aufgabe: Stelle GENAU EINE neue, konkrete Fachfrage zum Lepton 5100, deren Antwort die Datenbank noch nicht enthält.
+Regeln:
+- Die Frage muss sich klar von den bereits abgedeckten/gestellten unterscheiden (Liste unten) – KEINE Wiederholungen, auch nicht sinngemäß.
+- Decke nach und nach ALLE Bereiche ab: Inbetriebnahme, Bedienung/Terminal, Funkfernbedienung, Siebdeck-Einstellungen (Neigung, Drehzahl, Spaltweite), Aufgabegut/Material, Hydraulik & Öle, Elektrik/Frequenzumrichter (SEW), CAN-Bus, Display-/Fehlercodes, Wartung & Intervalle, Schmierstellen, Verschleißteile, Reinigung, Störungssuche, Absaugung/Windsichter, Magnetabscheider, Sicherheit/Not-Aus, Transport/Straßenfahrt, Ersatzteile.
+- Frag praxisnah und beantwortbar – ein konkretes Detail pro Frage.
+- Gib NUR die Frage aus: kein Vorwort, keine Nummerierung, keine Erklärung, KEINE "VORSCHLÄGE"-Zeile.
+- Sprache: ${lang}.
+
+BEREITS ABGEDECKT/GESTELLT:
+${context || "(noch nichts)"}`;
+      const qr = await client.messages.create({
+        model,
+        max_tokens: 200,
+        system: qsystem,
+        messages: [{ role: "user", content: "Bitte die nächste neue Fachfrage zum Lepton 5100." }],
+      });
+      const qtext = (qr.content || []).filter((b: any) => b.type === "text").map((b: any) => b.text).join(" ").trim();
+      return j({ answer: qtext, model });
+    }
 
     const system =
 `Du bist der Alzinger Service-Assistent für die Siebmaschine Lepton 5100 und ähnliche Alzinger-Maschinen.
