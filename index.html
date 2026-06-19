@@ -497,31 +497,32 @@ var I18N9={
   learn_run:"Lerne Dokument {n}/{t} …",learn_done:"Fertig: {ok} eingelesen · {bad} nicht lesbar (Scan/kein Text)",learn_none:"Alle Dokumente sind bereits eingelesen.",
   mic_title:"Sprechen",mic_listen:"Sprich jetzt …",mic_perm:"Mikrofon nicht erlaubt – in den Einstellungen freigeben.",mic_no:"Spracheingabe hier nicht möglich – nutze die Mikrofon-Taste der Tastatur.",
   recent:"Zuletzt aktualisiert",all_entries:"Alle Einträge ({n})",show_all:"Alle {n} Einträge anzeigen",
-  attach:"Bild/Plan anhängen",att_photo:"Foto aufnehmen / wählen",att_doc:"Plan/Dokument aus der Wissensablage:",att_none:"Keine PDF-Dokumente in der Ablage.",att_fail:"Konnte nicht geladen werden.",att_loading:"Wird geladen …",att_added:"{n} Seite(n)/Bild(er) angehängt",att_n:"Bild(er) angehängt"},
+  attach:"Bild/Plan anhängen",att_photo:"Foto aufnehmen / wählen",att_doc:"Plan/Dokument aus der Wissensablage:",att_none:"Keine PDF-Dokumente in der Ablage.",att_fail:"Konnte nicht geladen werden.",att_loading:"Wird geladen …",att_added:"{n} Seite(n)/Bild(er) angehängt",att_n:"Bild(er) angehängt",plan_read:"📐 Passenden Plan lesen …"},
  en:{add_img:"Image",img_added:"Image added",iv_head:"New question · {n} learned",
   learn_btn:"Learn documents",learn_hint:"Reads the text of all PDFs so Alzi knows their content – run once before training.",
   learn_run:"Learning document {n}/{t} …",learn_done:"Done: {ok} read · {bad} unreadable (scan/no text)",learn_none:"All documents are already read.",
   mic_title:"Speak",mic_listen:"Speak now …",mic_perm:"Microphone not allowed – enable it in settings.",mic_no:"Voice input not available here – use the keyboard's microphone key.",
   recent:"Recently updated",all_entries:"All entries ({n})",show_all:"Show all {n} entries",
-  attach:"Attach image/diagram",att_photo:"Take / choose photo",att_doc:"Plan/document from the knowledge files:",att_none:"No PDF documents in storage.",att_fail:"Could not load.",att_loading:"Loading …",att_added:"{n} page(s)/image(s) attached",att_n:"image(s) attached"},
+  attach:"Attach image/diagram",att_photo:"Take / choose photo",att_doc:"Plan/document from the knowledge files:",att_none:"No PDF documents in storage.",att_fail:"Could not load.",att_loading:"Loading …",att_added:"{n} page(s)/image(s) attached",att_n:"image(s) attached",plan_read:"📐 Reading the matching plan …"},
  pl:{add_img:"Zdjęcie",img_added:"Dodano zdjęcie",iv_head:"Nowe pytanie · nauczono {n}",
   learn_btn:"Wczytaj dokumenty",learn_hint:"Wczytuje tekst wszystkich PDF, aby Alzi znał treść – uruchom raz przed treningiem.",
   learn_run:"Wczytywanie {n}/{t} …",learn_done:"Gotowe: {ok} wczytano · {bad} nieczytelne (skan)",learn_none:"Wszystkie dokumenty są już wczytane.",
   mic_title:"Mów",mic_listen:"Mów teraz …",mic_perm:"Brak dostępu do mikrofonu – włącz w ustawieniach.",mic_no:"Wprowadzanie głosowe niedostępne – użyj mikrofonu klawiatury.",
   recent:"Ostatnio zaktualizowane",all_entries:"Wszystkie wpisy ({n})",show_all:"Pokaż wszystkie ({n})",
-  attach:"Dodaj zdjęcie/schemat",att_photo:"Zrób / wybierz zdjęcie",att_doc:"Plan/dokument z bazy wiedzy:",att_none:"Brak dokumentów PDF.",att_fail:"Nie udało się wczytać.",att_loading:"Wczytywanie …",att_added:"Dodano {n} stron/obrazów",att_n:"obraz(y)"},
+  attach:"Dodaj zdjęcie/schemat",att_photo:"Zrób / wybierz zdjęcie",att_doc:"Plan/dokument z bazy wiedzy:",att_none:"Brak dokumentów PDF.",att_fail:"Nie udało się wczytać.",att_loading:"Wczytywanie …",att_added:"Dodano {n} stron/obrazów",att_n:"obraz(y)",plan_read:"📐 Czytam pasujący schemat …"},
  fr:{add_img:"Image",img_added:"Image ajoutée",iv_head:"Nouvelle question · {n} appris",
   learn_btn:"Apprendre les docs",learn_hint:"Lit le texte de tous les PDF pour qu'Alzi en connaisse le contenu – à lancer avant la formation.",
   learn_run:"Lecture {n}/{t} …",learn_done:"Terminé : {ok} lus · {bad} illisibles (scan)",learn_none:"Tous les documents sont déjà lus.",
   mic_title:"Parler",mic_listen:"Parlez …",mic_perm:"Micro non autorisé – activez-le dans les réglages.",mic_no:"Saisie vocale indisponible ici – utilisez le micro du clavier.",
   recent:"Récemment mis à jour",all_entries:"Toutes les entrées ({n})",show_all:"Afficher les {n} entrées",
-  attach:"Joindre image/schéma",att_photo:"Prendre / choisir une photo",att_doc:"Plan/document de la base de connaissances :",att_none:"Aucun document PDF.",att_fail:"Échec du chargement.",att_loading:"Chargement …",att_added:"{n} page(s)/image(s) jointe(s)",att_n:"image(s) jointe(s)"}
+  attach:"Joindre image/schéma",att_photo:"Prendre / choisir une photo",att_doc:"Plan/document de la base de connaissances :",att_none:"Aucun document PDF.",att_fail:"Échec du chargement.",att_loading:"Chargement …",att_added:"{n} page(s)/image(s) jointe(s)",att_n:"image(s) jointe(s)",plan_read:"📐 Lecture du plan correspondant …"}
 };
 for(var _l9 in I18N9){for(var _k9 in I18N9[_l9])I18N[_l9][_k9]=I18N9[_l9][_k9];}
 I18N.de.whatsnew="Was ist neu?";I18N.en.whatsnew="What's new?";I18N.pl.whatsnew="Co nowego?";I18N.fr.whatsnew="Nouveautés ?";
 I18N.de.changelog="Versionsverlauf";I18N.en.changelog="Version history";I18N.pl.changelog="Historia wersji";I18N.fr.changelog="Historique des versions";
-var APPVER="v45";
+var APPVER="v46";
 var CHANGELOG=[
+ {v:"v46",d:"Pläne automatisch: Bei Plan-/Schaltplan-Fragen holt Alzi die passende Seite selbst aus der Wissensablage und liest sie – ohne manuelles Anhängen."},
  {v:"v45",d:"Alzi kann jetzt SEHEN: Schaltplan/Dokument-Seiten oder ein Foto an die Frage anhängen (📎) – Alzi liest das Bild (z. B. Verdrahtung im Schaltplan). Braucht einmal ein Supabase-Update."},
  {v:"v44",d:"Chat am Handy: Eingabezeile bleibt immer sichtbar – nur die Nachrichten scrollen, kein Hochscrollen mehr (auch bei offener Tastatur)."},
  {v:"v43",d:"Alzi antwortet kürzer: knapp auf den Punkt (wenige Stichpunkte/Sätze) statt langer Texte."},
@@ -1126,7 +1127,11 @@ function chatAsk(q){
     CHAT.push({role:"bot",thinking:true});
     if(CHAT.length>60)CHAT=CHAT.slice(-60);
     lsSet(LS_CHAT,CHAT);renderChat();
-    kiAnswer(q||"Bitte den angehängten Plan / das Bild lesen und meine Frage dazu beantworten.",imgs);
+    if(imgs.length){
+      kiAnswer(q||"Bitte den angehängten Plan / das Bild lesen und meine Frage dazu beantworten.",imgs);
+    }else{
+      autoVision(q,function(auto){kiAnswer(q,auto);});
+    }
   }else{
     var r=assistRank(q).slice(0,4);
     if(r.length)CHAT.push({role:"bot",items:r.map(function(x){return x.a.id;}),ts:Date.now()});
@@ -1274,6 +1279,61 @@ function renderPdfPages(url,maxPages,cb){
           return page.render({canvasContext:c.getContext("2d"),viewport:vp}).promise.then(function(){imgs.push(c.toDataURL("image/jpeg",0.72));});
         });});})(i);}
         return seq.then(function(){cb(imgs);});
+      });
+    });
+  }).catch(function(){cb([]);});
+}
+/* ---- Automatisches Plan-Lesen im Hintergrund ---- */
+function isPlanDoc(a){
+  var s=((a.title||"")+" "+(a.dokart||"")+" "+(a.files||[]).map(function(f){return f.name||"";}).join(" ")).toLowerCase();
+  return /plan|schalt|schema|anschluss|hydraulik|stromlauf|klemm|verdraht|stromlaufplan/.test(s);
+}
+function planDocs(){return artsArr().filter(function(a){return isPlanDoc(a)&&(a.files||[]).some(isPdf);});}
+var PLAN_KW=/(schaltplan|stromlauf|klemm|verdraht|verkabel|not[- ]?halt|sicherheitskreis|relais|sicherung|anschluss|elektr|sch[üu]tz|frequenzumrichter|\bfu\b|hydraulikplan|schema|kabel|stecker|pin\b|leitung)/i;
+function autoVisionDoc(q){
+  var r=assistRank(q),i;
+  for(i=0;i<r.length&&i<4;i++){if(isPlanDoc(r[i].a)&&(r[i].a.files||[]).some(isPdf))return r[i].a;}
+  if(PLAN_KW.test(q||"")){
+    var pd=planDocs();if(pd.length){
+      var terms=aTerms(q),best=pd[0],bs=-1;
+      pd.forEach(function(a){var f=aFields(a),s=0;terms.forEach(function(w){if(aHit(f.hi,w)||aHit(f.md,w)||aHit(f.lo,w))s++;});if(s>bs){bs=s;best=a;}});
+      return best;
+    }
+  }
+  return null;
+}
+function autoVision(q,cb){
+  if(!sbReady()){cb([]);return;}
+  var a=autoVisionDoc(q);if(!a){cb([]);return;}
+  var f=(a.files||[]).filter(isPdf)[0];if(!f||!f.url){cb([]);return;}
+  toast(t("plan_read"));
+  planVision(f.url,q,function(imgs){
+    cb((imgs||[]).map(dataUrlParts).filter(Boolean));
+  });
+}
+/* lädt das Plan-PDF einmal, wählt die zur Frage passende(n) Seite(n) per Text und rendert sie als Bild */
+function planVision(url,q,cb){
+  loadPdfJs().then(function(lib){
+    return fetch(url).then(function(r){return r.arrayBuffer();}).then(function(buf){
+      return lib.getDocument({data:new Uint8Array(buf)}).promise.then(function(pdf){
+        var n=Math.min(pdf.numPages,40),texts={},seq=Promise.resolve();
+        for(var i=1;i<=n;i++){(function(p){seq=seq.then(function(){return pdf.getPage(p).then(function(pg){return pg.getTextContent();}).then(function(tc){texts[p]=tc.items.map(function(it){return it.str;}).join(" ").toLowerCase();});});})(i);}
+        return seq.then(function(){
+          var terms=aTerms(q),scored=[];
+          for(var p=1;p<=n;p++){var low=texts[p]||"",s=0;terms.forEach(function(w){if(aHit(low,w))s++;});scored.push({p:p,s:s});}
+          scored.sort(function(x,y){return y.s-x.s;});
+          var pick=[];
+          if(scored[0]&&scored[0].s>0){pick.push(scored[0].p);if(scored[1]&&scored[1].s>0)pick.push(scored[1].p);}
+          else pick=[1];
+          pick=pick.slice(0,2);
+          var imgs=[],rseq=Promise.resolve();
+          pick.forEach(function(pn){rseq=rseq.then(function(){return pdf.getPage(pn).then(function(page){
+            var base=page.getViewport({scale:1});var scale=Math.min(2.5,1600/base.width);if(!(scale>0))scale=1.5;
+            var vp=page.getViewport({scale:scale});var c=document.createElement("canvas");c.width=Math.round(vp.width);c.height=Math.round(vp.height);
+            return page.render({canvasContext:c.getContext("2d"),viewport:vp}).promise.then(function(){imgs.push(c.toDataURL("image/jpeg",0.72));});
+          });});});
+          return rseq.then(function(){cb(imgs);});
+        });
       });
     });
   }).catch(function(){cb([]);});
