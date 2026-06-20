@@ -520,8 +520,9 @@ var I18N9={
 for(var _l9 in I18N9){for(var _k9 in I18N9[_l9])I18N[_l9][_k9]=I18N9[_l9][_k9];}
 I18N.de.whatsnew="Was ist neu?";I18N.en.whatsnew="What's new?";I18N.pl.whatsnew="Co nowego?";I18N.fr.whatsnew="Nouveautés ?";
 I18N.de.changelog="Versionsverlauf";I18N.en.changelog="Version history";I18N.pl.changelog="Historia wersji";I18N.fr.changelog="Historique des versions";
-var APPVER="v46";
+var APPVER="v47";
 var CHANGELOG=[
+ {v:"v47",d:"Beim Öffnen springt die App nicht mehr in die Suchleiste (Tastatur geht nicht mehr automatisch auf)."},
  {v:"v46",d:"Pläne automatisch: Bei Plan-/Schaltplan-Fragen holt Alzi die passende Seite selbst aus der Wissensablage und liest sie – ohne manuelles Anhängen."},
  {v:"v45",d:"Alzi kann jetzt SEHEN: Schaltplan/Dokument-Seiten oder ein Foto an die Frage anhängen (📎) – Alzi liest das Bild (z. B. Verdrahtung im Schaltplan). Braucht einmal ein Supabase-Update."},
  {v:"v44",d:"Chat am Handy: Eingabezeile bleibt immer sichtbar – nur die Nachrichten scrollen, kein Hochscrollen mehr (auch bei offener Tastatur)."},
@@ -1925,10 +1926,15 @@ function deepLinkUrl(id){return location.origin+location.pathname+"#id="+encodeU
 function startApp(){
   $("gate").classList.add("hidden");$("app").classList.remove("hidden");
   applyI18n();loadLocal();renderTabs();renderList();showView("viewList");
+  setTimeout(blurField,80);setTimeout(blurField,350);
   var want=pendingDeepLink();
   if(want&&DB.arts[want])openDetail(want);
   syncPull().then(function(){renderTabs();renderList();if(want&&DB.arts[want])openDetail(want);});
 }
+/* Verhindert, dass beim App-Start/Wiederöffnen die Tastatur (Suchleiste) automatisch aufgeht */
+function blurField(){try{var ae=document.activeElement;if(ae&&ae.id!=="chatIn"&&typeof ae.blur==="function")ae.blur();}catch(e){}}
+window.addEventListener("pageshow",function(){setTimeout(blurField,0);setTimeout(blurField,250);});
+document.addEventListener("visibilitychange",function(){if(!document.hidden){setTimeout(blurField,0);setTimeout(blurField,250);}});
 function showGate(){$("app").classList.add("hidden");$("gate").classList.remove("hidden");renderGate();}
 
 function renderGate(){
