@@ -521,8 +521,9 @@ var I18N9={
 for(var _l9 in I18N9){for(var _k9 in I18N9[_l9])I18N[_l9][_k9]=I18N9[_l9][_k9];}
 I18N.de.whatsnew="Was ist neu?";I18N.en.whatsnew="What's new?";I18N.pl.whatsnew="Co nowego?";I18N.fr.whatsnew="Nouveautés ?";
 I18N.de.changelog="Versionsverlauf";I18N.en.changelog="Version history";I18N.pl.changelog="Historia wersji";I18N.fr.changelog="Historique des versions";
-var APPVER="v50";
+var APPVER="v51";
 var CHANGELOG=[
+ {v:"v51",d:"Chat-Ansicht nicht mehr abgeschnitten: die obere Leiste (Zurück/Alzi) ist immer sichtbar, auch wenn die Liste vorher gescrollt war."},
  {v:"v50",d:"Status pro Dokument in der Wissensablage: man sieht live, welche Datei „gelesen ✓\", „OCR ✓\", gerade „wird gelesen …\", „offen\" oder „kein Text\" ist."},
  {v:"v49",d:"Texterkennung (OCR) für Pläne & gescannte PDFs: „Dokumente lernen\" wandelt Plan-/Scan-Seiten in Bilder um und liest sie per OCR – dadurch werden auch reine Scans durchsuchbar und Alzi findet die richtige Plan-Seite. Braucht einmal ein Supabase-Update."},
  {v:"v48",d:"Kein Seiten-Springen mehr beim App-Start: die Suchleiste öffnet die Tastatur erst, wenn du sie antippst."},
@@ -868,6 +869,7 @@ function showView(name){
   ["viewList","viewDetail","viewEdit","viewSet","viewChat"].forEach(function(v){$(v).classList.add("hidden");});
   $(name).classList.remove("hidden");
   $("fab").style.display=(name==="viewList")?"flex":"none";
+  window.scrollTo(0,0);
   document.body.classList.toggle("chatopen",name==="viewChat");
   window.scrollTo(0,0);
   if(name==="viewChat")sizeChat();
@@ -875,6 +877,7 @@ function showView(name){
 function sizeChat(){
   var vc=$("viewChat");if(!vc||vc.classList.contains("hidden"))return;
   var pane=vc.querySelector(".chatpane");if(!pane)return;
+  window.scrollTo(0,0);
   var top=pane.getBoundingClientRect().top;
   var vv=window.visualViewport;
   var visibleBottom=vv?(vv.offsetTop+vv.height):window.innerHeight;
