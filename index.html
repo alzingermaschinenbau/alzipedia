@@ -383,7 +383,7 @@ hr.s{border:0;border-top:1px solid var(--line);margin:16px 0}
     <div id="viewList">
       <div id="home"></div>
       <div class="searchbar">
-        <input id="q" placeholder="Suchen … (Symptom, Fehlercode, Stichwort)" autocomplete="off">
+        <input id="q" placeholder="Suchen … (Symptom, Fehlercode, Stichwort)" autocomplete="off" readonly>
       </div>
       <div class="tabs" id="tabs"></div>
       <div id="sub"></div>
@@ -520,8 +520,9 @@ var I18N9={
 for(var _l9 in I18N9){for(var _k9 in I18N9[_l9])I18N[_l9][_k9]=I18N9[_l9][_k9];}
 I18N.de.whatsnew="Was ist neu?";I18N.en.whatsnew="What's new?";I18N.pl.whatsnew="Co nowego?";I18N.fr.whatsnew="Nouveautés ?";
 I18N.de.changelog="Versionsverlauf";I18N.en.changelog="Version history";I18N.pl.changelog="Historia wersji";I18N.fr.changelog="Historique des versions";
-var APPVER="v47";
+var APPVER="v48";
 var CHANGELOG=[
+ {v:"v48",d:"Kein Seiten-Springen mehr beim App-Start: die Suchleiste öffnet die Tastatur erst, wenn du sie antippst."},
  {v:"v47",d:"Beim Öffnen springt die App nicht mehr in die Suchleiste (Tastatur geht nicht mehr automatisch auf)."},
  {v:"v46",d:"Pläne automatisch: Bei Plan-/Schaltplan-Fragen holt Alzi die passende Seite selbst aus der Wissensablage und liest sie – ohne manuelles Anhängen."},
  {v:"v45",d:"Alzi kann jetzt SEHEN: Schaltplan/Dokument-Seiten oder ein Foto an die Frage anhängen (📎) – Alzi liest das Bild (z. B. Verdrahtung im Schaltplan). Braucht einmal ein Supabase-Update."},
@@ -1992,6 +1993,12 @@ $("setBtn").onclick=function(){openSettings();};
 $("kiBtn").onclick=function(){openChat();};
 $("fab").onclick=function(){openEditor(null);};
 $("q").addEventListener("input",function(){QTEXT=this.value;homeExpanded=false;renderList();});
+/* Suchleiste startet "readonly" -> keine Tastatur beim App-Start; beim Antippen wird sie aktiv */
+(function(){var q=$("q");if(!q)return;
+  function arm(){if(q.hasAttribute("readonly"))q.removeAttribute("readonly");}
+  q.addEventListener("pointerdown",arm);q.addEventListener("touchstart",arm,{passive:true});q.addEventListener("mousedown",arm);
+  document.addEventListener("visibilitychange",function(){if(document.hidden&&document.activeElement!==q)q.setAttribute("readonly","");});
+})();
 window.addEventListener("online",function(){if(sbReady())syncPull().then(function(){renderTabs();renderList();});});
 
 /* Auto-Login: gespeicherte Supabase-Session wiederherstellen (auch offline) */
