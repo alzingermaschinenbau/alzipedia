@@ -53,6 +53,23 @@ ${context || "(noch nichts)"}`;
       return j({ answer: qtext, model });
     }
 
+    // OCR-Modus: Text aus EINEM Bild (Plan-/Scan-Seite) auslesen.
+    if (mode === "ocr") {
+      const img = body.image || {};
+      if (!img.data) return j({ text: "" });
+      const r = await client.messages.create({
+        model: "claude-sonnet-4-6",
+        max_tokens: 1500,
+        system: "Du bist eine reine OCR-/Transkriptions-Engine. Gib NUR den auf dem Bild sichtbaren Text exakt wieder – inkl. Beschriftungen, Klemmen-/Bauteilbezeichnungen, Tabellen, Zahlen, Symboltexte. Keine Erklärungen, keine Interpretation, keine Übersetzung. Wenn nichts lesbar ist, gib einen leeren Text zurück.",
+        messages: [{ role: "user", content: [
+          { type: "image", source: { type: "base64", media_type: String(img.media_type || "image/jpeg"), data: String(img.data || "") } },
+          { type: "text", text: "Transkribiere den gesamten sichtbaren Text dieses Dokuments/Plans." },
+        ] }],
+      });
+      const text = (r.content || []).filter((b: any) => b.type === "text").map((b: any) => b.text).join(" ").trim();
+      return j({ text });
+    }
+
     const system =
 `Du bist der Alzinger Service-Assistent für die Siebmaschine Lepton 5100 und ähnliche Alzinger-Maschinen.
 Du hilfst Servicetechnikern und Bedienern bei Störungssuche, Einstellungen und Wartung – praxisnah und konkret.

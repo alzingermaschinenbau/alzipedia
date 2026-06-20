@@ -494,25 +494,25 @@ for(var _l8 in I18N8){for(var _k8 in I18N8[_l8])I18N[_l8][_k8]=I18N8[_l8][_k8];}
 var I18N9={
  de:{add_img:"Bild",img_added:"Bild hinzugefügt",iv_head:"Neue Frage · schon {n} gelernt",
   learn_btn:"Dokumente lernen",learn_hint:"Liest den Text aller PDFs ein, damit Alzi den Inhalt kennt – vor dem Training einmal ausführen.",
-  learn_run:"Lerne Dokument {n}/{t} …",learn_done:"Fertig: {ok} eingelesen · {bad} nicht lesbar (Scan/kein Text)",learn_none:"Alle Dokumente sind bereits eingelesen.",
+  learn_run:"Lerne Dokument {n}/{t} …",learn_done:"Fertig: {ok} eingelesen · {bad} nicht lesbar (Scan/kein Text)",learn_done2:"Fertig: {ok} gelesen · {ocr}× Texterkennung · {bad} ohne Text",learn_none:"Alle Dokumente sind bereits eingelesen.",
   mic_title:"Sprechen",mic_listen:"Sprich jetzt …",mic_perm:"Mikrofon nicht erlaubt – in den Einstellungen freigeben.",mic_no:"Spracheingabe hier nicht möglich – nutze die Mikrofon-Taste der Tastatur.",
   recent:"Zuletzt aktualisiert",all_entries:"Alle Einträge ({n})",show_all:"Alle {n} Einträge anzeigen",
   attach:"Bild/Plan anhängen",att_photo:"Foto aufnehmen / wählen",att_doc:"Plan/Dokument aus der Wissensablage:",att_none:"Keine PDF-Dokumente in der Ablage.",att_fail:"Konnte nicht geladen werden.",att_loading:"Wird geladen …",att_added:"{n} Seite(n)/Bild(er) angehängt",att_n:"Bild(er) angehängt",plan_read:"📐 Passenden Plan lesen …"},
  en:{add_img:"Image",img_added:"Image added",iv_head:"New question · {n} learned",
   learn_btn:"Learn documents",learn_hint:"Reads the text of all PDFs so Alzi knows their content – run once before training.",
-  learn_run:"Learning document {n}/{t} …",learn_done:"Done: {ok} read · {bad} unreadable (scan/no text)",learn_none:"All documents are already read.",
+  learn_run:"Learning document {n}/{t} …",learn_done:"Done: {ok} read · {bad} unreadable (scan/no text)",learn_done2:"Done: {ok} read · {ocr}× OCR · {bad} no text",learn_none:"All documents are already read.",
   mic_title:"Speak",mic_listen:"Speak now …",mic_perm:"Microphone not allowed – enable it in settings.",mic_no:"Voice input not available here – use the keyboard's microphone key.",
   recent:"Recently updated",all_entries:"All entries ({n})",show_all:"Show all {n} entries",
   attach:"Attach image/diagram",att_photo:"Take / choose photo",att_doc:"Plan/document from the knowledge files:",att_none:"No PDF documents in storage.",att_fail:"Could not load.",att_loading:"Loading …",att_added:"{n} page(s)/image(s) attached",att_n:"image(s) attached",plan_read:"📐 Reading the matching plan …"},
  pl:{add_img:"Zdjęcie",img_added:"Dodano zdjęcie",iv_head:"Nowe pytanie · nauczono {n}",
   learn_btn:"Wczytaj dokumenty",learn_hint:"Wczytuje tekst wszystkich PDF, aby Alzi znał treść – uruchom raz przed treningiem.",
-  learn_run:"Wczytywanie {n}/{t} …",learn_done:"Gotowe: {ok} wczytano · {bad} nieczytelne (skan)",learn_none:"Wszystkie dokumenty są już wczytane.",
+  learn_run:"Wczytywanie {n}/{t} …",learn_done:"Gotowe: {ok} wczytano · {bad} nieczytelne (skan)",learn_done2:"Gotowe: {ok} wczytano · {ocr}× OCR · {bad} bez tekstu",learn_none:"Wszystkie dokumenty są już wczytane.",
   mic_title:"Mów",mic_listen:"Mów teraz …",mic_perm:"Brak dostępu do mikrofonu – włącz w ustawieniach.",mic_no:"Wprowadzanie głosowe niedostępne – użyj mikrofonu klawiatury.",
   recent:"Ostatnio zaktualizowane",all_entries:"Wszystkie wpisy ({n})",show_all:"Pokaż wszystkie ({n})",
   attach:"Dodaj zdjęcie/schemat",att_photo:"Zrób / wybierz zdjęcie",att_doc:"Plan/dokument z bazy wiedzy:",att_none:"Brak dokumentów PDF.",att_fail:"Nie udało się wczytać.",att_loading:"Wczytywanie …",att_added:"Dodano {n} stron/obrazów",att_n:"obraz(y)",plan_read:"📐 Czytam pasujący schemat …"},
  fr:{add_img:"Image",img_added:"Image ajoutée",iv_head:"Nouvelle question · {n} appris",
   learn_btn:"Apprendre les docs",learn_hint:"Lit le texte de tous les PDF pour qu'Alzi en connaisse le contenu – à lancer avant la formation.",
-  learn_run:"Lecture {n}/{t} …",learn_done:"Terminé : {ok} lus · {bad} illisibles (scan)",learn_none:"Tous les documents sont déjà lus.",
+  learn_run:"Lecture {n}/{t} …",learn_done:"Terminé : {ok} lus · {bad} illisibles (scan)",learn_done2:"Terminé : {ok} lus · {ocr}× OCR · {bad} sans texte",learn_none:"Tous les documents sont déjà lus.",
   mic_title:"Parler",mic_listen:"Parlez …",mic_perm:"Micro non autorisé – activez-le dans les réglages.",mic_no:"Saisie vocale indisponible ici – utilisez le micro du clavier.",
   recent:"Récemment mis à jour",all_entries:"Toutes les entrées ({n})",show_all:"Afficher les {n} entrées",
   attach:"Joindre image/schéma",att_photo:"Prendre / choisir une photo",att_doc:"Plan/document de la base de connaissances :",att_none:"Aucun document PDF.",att_fail:"Échec du chargement.",att_loading:"Chargement …",att_added:"{n} page(s)/image(s) jointe(s)",att_n:"image(s) jointe(s)",plan_read:"📐 Lecture du plan correspondant …"}
@@ -520,8 +520,9 @@ var I18N9={
 for(var _l9 in I18N9){for(var _k9 in I18N9[_l9])I18N[_l9][_k9]=I18N9[_l9][_k9];}
 I18N.de.whatsnew="Was ist neu?";I18N.en.whatsnew="What's new?";I18N.pl.whatsnew="Co nowego?";I18N.fr.whatsnew="Nouveautés ?";
 I18N.de.changelog="Versionsverlauf";I18N.en.changelog="Version history";I18N.pl.changelog="Historia wersji";I18N.fr.changelog="Historique des versions";
-var APPVER="v48";
+var APPVER="v49";
 var CHANGELOG=[
+ {v:"v49",d:"Texterkennung (OCR) für Pläne & gescannte PDFs: „Dokumente lernen\" wandelt Plan-/Scan-Seiten in Bilder um und liest sie per OCR – dadurch werden auch reine Scans durchsuchbar und Alzi findet die richtige Plan-Seite. Braucht einmal ein Supabase-Update."},
  {v:"v48",d:"Kein Seiten-Springen mehr beim App-Start: die Suchleiste öffnet die Tastatur erst, wenn du sie antippst."},
  {v:"v47",d:"Beim Öffnen springt die App nicht mehr in die Suchleiste (Tastatur geht nicht mehr automatisch auf)."},
  {v:"v46",d:"Pläne automatisch: Bei Plan-/Schaltplan-Fragen holt Alzi die passende Seite selbst aus der Wissensablage und liest sie – ohne manuelles Anhängen."},
@@ -1309,33 +1310,37 @@ function autoVision(q,cb){
   var a=autoVisionDoc(q);if(!a){cb([]);return;}
   var f=(a.files||[]).filter(isPdf)[0];if(!f||!f.url){cb([]);return;}
   toast(t("plan_read"));
-  planVision(f.url,q,function(imgs){
+  planVision(f.url,q,f.pages||null,function(imgs){
     cb((imgs||[]).map(dataUrlParts).filter(Boolean));
   });
 }
-/* lädt das Plan-PDF einmal, wählt die zur Frage passende(n) Seite(n) per Text und rendert sie als Bild */
-function planVision(url,q,cb){
+function planChoose(q,texts,count){
+  var terms=aTerms(q),scored=[];
+  for(var p=1;p<=count;p++){var low=texts[p]||"",s=0;terms.forEach(function(w){if(aHit(low,w))s++;});scored.push({p:p,s:s});}
+  scored.sort(function(x,y){return y.s-x.s;});
+  var pick=[];
+  if(scored[0]&&scored[0].s>0){pick.push(scored[0].p);if(scored[1]&&scored[1].s>0)pick.push(scored[1].p);}
+  else pick=[1];
+  return pick.slice(0,2);
+}
+/* lädt das Plan-PDF einmal, wählt die passende(n) Seite(n) (per gespeichertem/OCR-Text) und rendert sie als Bild */
+function planVision(url,q,pagesText,cb){
   loadPdfJs().then(function(lib){
     return fetch(url).then(function(r){return r.arrayBuffer();}).then(function(buf){
       return lib.getDocument({data:new Uint8Array(buf)}).promise.then(function(pdf){
-        var n=Math.min(pdf.numPages,40),texts={},seq=Promise.resolve();
-        for(var i=1;i<=n;i++){(function(p){seq=seq.then(function(){return pdf.getPage(p).then(function(pg){return pg.getTextContent();}).then(function(tc){texts[p]=tc.items.map(function(it){return it.str;}).join(" ").toLowerCase();});});})(i);}
-        return seq.then(function(){
-          var terms=aTerms(q),scored=[];
-          for(var p=1;p<=n;p++){var low=texts[p]||"",s=0;terms.forEach(function(w){if(aHit(low,w))s++;});scored.push({p:p,s:s});}
-          scored.sort(function(x,y){return y.s-x.s;});
-          var pick=[];
-          if(scored[0]&&scored[0].s>0){pick.push(scored[0].p);if(scored[1]&&scored[1].s>0)pick.push(scored[1].p);}
-          else pick=[1];
-          pick=pick.slice(0,2);
+        function renderPick(pick){
           var imgs=[],rseq=Promise.resolve();
-          pick.forEach(function(pn){rseq=rseq.then(function(){return pdf.getPage(pn).then(function(page){
-            var base=page.getViewport({scale:1});var scale=Math.min(2.5,1600/base.width);if(!(scale>0))scale=1.5;
-            var vp=page.getViewport({scale:scale});var c=document.createElement("canvas");c.width=Math.round(vp.width);c.height=Math.round(vp.height);
-            return page.render({canvasContext:c.getContext("2d"),viewport:vp}).promise.then(function(){imgs.push(c.toDataURL("image/jpeg",0.72));});
-          });});});
+          pick.forEach(function(pn){rseq=rseq.then(function(){return renderPdfPageImg(pdf,pn).then(function(du){imgs.push(du);});});});
           return rseq.then(function(){cb(imgs);});
-        });
+        }
+        if(pagesText&&pagesText.length){
+          var cnt=Math.min(pdf.numPages,pagesText.length),tx={};
+          for(var p=1;p<=cnt;p++)tx[p]=(pagesText[p-1]||"").toLowerCase();
+          return renderPick(planChoose(q,tx,cnt));
+        }
+        var n=Math.min(pdf.numPages,40),texts={},seq=Promise.resolve();
+        for(var i=1;i<=n;i++){(function(pp){seq=seq.then(function(){return pdf.getPage(pp).then(function(pg){return pg.getTextContent();}).then(function(tc){texts[pp]=tc.items.map(function(it){return it.str;}).join(" ").toLowerCase();});});})(i);}
+        return seq.then(function(){return renderPick(planChoose(q,texts,n));});
       });
     });
   }).catch(function(){cb([]);});
@@ -1781,29 +1786,70 @@ function wissenRows(){
 }
 /* Alle Dokumente "lernen": PDF-Text auslesen, wo er noch fehlt (z. B. Altbestand) */
 var LEARNING=false;
+function ocrImage(dataUrl){
+  var p=dataUrlParts(dataUrl);if(!p||!sbReady())return Promise.resolve("");
+  return ensureToken().then(function(){
+    return fetch(sbOrigin()+"/functions/v1/alzi-ki",{method:"POST",headers:{apikey:SB.key,Authorization:"Bearer "+sbBearer(),"Content-Type":"application/json"},body:JSON.stringify({mode:"ocr",image:{media_type:p.media_type,data:p.data}})});
+  }).then(function(r){return r.json();}).then(function(d){return (d&&d.text)||"";}).catch(function(){return "";});
+}
+function renderPdfPageImg(pdf,pageNum){
+  return pdf.getPage(pageNum).then(function(page){
+    var base=page.getViewport({scale:1});var scale=Math.min(2.5,1600/base.width);if(!(scale>0))scale=1.5;
+    var vp=page.getViewport({scale:scale});var c=document.createElement("canvas");c.width=Math.round(vp.width);c.height=Math.round(vp.height);
+    return page.render({canvasContext:c.getContext("2d"),viewport:vp}).promise.then(function(){return c.toDataURL("image/jpeg",0.72);});
+  });
+}
+/* liest ein PDF aus: Text je Seite; bei Plänen/Scans (wenig Text) wird die Seite per OCR gelesen */
+function learnDocDeep(url,planLike){
+  return loadPdfJs().then(function(lib){
+    return fetch(url).then(function(r){return r.arrayBuffer();}).then(function(buf){
+      return lib.getDocument({data:new Uint8Array(buf)}).promise.then(function(pdf){
+        var n=pdf.numPages,pageText={},seq=Promise.resolve();
+        for(var i=1;i<=n;i++){(function(p){seq=seq.then(function(){return pdf.getPage(p).then(function(pg){return pg.getTextContent();}).then(function(tc){pageText[p]=tc.items.map(function(it){return it.str;}).join(" ").replace(/\s+/g," ").trim();});});})(i);}
+        return seq.then(function(){
+          var total=0;for(var p1=1;p1<=n;p1++)total+=(pageText[p1]||"").length;
+          var avg=n?total/n:0,visual=planLike||avg<150;
+          if(!visual){
+            var txt="";for(var a=1;a<=n;a++)txt+=(pageText[a]||"")+"\n";
+            return {text:txt.slice(0,400000),pages:[],ocr:0,visual:false};
+          }
+          var cap=Math.min(n,20),out={},ocr=0,oseq=Promise.resolve();
+          for(var k=1;k<=cap;k++){(function(p){oseq=oseq.then(function(){
+            var tx=pageText[p]||"";
+            if(tx.length>=200){out[p]=tx;return;}
+            return renderPdfPageImg(pdf,p).then(function(du){return ocrImage(du);}).then(function(ot){if(ot&&ot.length>tx.length){out[p]=ot;ocr++;}else out[p]=tx;});
+          });})(k);}
+          return oseq.then(function(){
+            var pages=[],txt2="";for(var b=1;b<=cap;b++){pages.push(out[b]||"");txt2+=(out[b]||"")+"\n";}
+            return {text:txt2.slice(0,400000),pages:pages,ocr:ocr,visual:true};
+          });
+        });
+      });
+    });
+  }).catch(function(){return {text:"",pages:[],ocr:0,visual:false};});
+}
 function learnAllDocs(){
   if(LEARNING)return;
   var todo=[];
-  wissenDocs().forEach(function(a){
-    (a.files||[]).forEach(function(f){
-      if(isPdf(f)&&(!f.text||f.text.length<40)&&f.url)todo.push({a:a,f:f});
-    });
-  });
+  wissenDocs().forEach(function(a){(a.files||[]).forEach(function(f){if(isPdf(f)&&f.url&&!f.learned)todo.push({a:a,f:f});});});
   if(!todo.length){toast(t("learn_none"));return;}
-  LEARNING=true;
-  var ok=0,bad=0,i=0;
-  if($("learnBtn")){$("learnBtn").disabled=true;}
+  LEARNING=true;var ok=0,bad=0,ocrTot=0,i=0;
+  if($("learnBtn"))$("learnBtn").disabled=true;
   function step(){
     if(i>=todo.length){
       LEARNING=false;if($("learnBtn"))$("learnBtn").disabled=false;
       if($("wissenList"))$("wissenList").innerHTML=wissenRows();bindWissen();renderTabs();renderList();
-      toast(t("learn_done",{ok:ok,bad:bad}));return;
+      toast(t("learn_done2",{ok:ok,ocr:ocrTot,bad:bad}));return;
     }
     var it=todo[i++];toast(t("learn_run",{n:i,t:todo.length}));
-    extractPdfFromUrl(it.f.url).then(function(txt){
-      if(txt&&txt.length>=40){it.f.text=txt;saveArticle(it.a);ok++;}else bad++;
-      step();
-    }).catch(function(){bad++;step();});
+    learnDocDeep(it.f.url,isPlanDoc(it.a)).then(function(res){
+      it.f.learned=Date.now();
+      var has=res.text&&res.text.replace(/\s/g,"").length>=20;
+      if(has){it.f.text=res.text;ok++;}else bad++;
+      if(res.visual&&res.pages&&res.pages.length)it.f.pages=res.pages;
+      if(res.ocr)ocrTot+=res.ocr;
+      saveArticle(it.a);step();
+    });
   }
   step();
 }
