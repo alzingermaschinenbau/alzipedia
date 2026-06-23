@@ -270,6 +270,8 @@ body.chatopen .wrap{padding-bottom:0}
 .micbtn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .micbtn:active{transform:scale(.94)}
 .dst{flex:0 0 auto;font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.prow{display:flex;align-items:center;gap:10px;padding:8px 2px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--line)}
+.prow:last-child{border-bottom:0}.prow span{flex:1}
 .pendimg{display:none;flex-wrap:wrap;gap:8px;padding:8px 0 2px}
 .pend{position:relative;width:54px;height:54px;border-radius:8px;overflow:hidden;border:1px solid var(--line)}
 .pend img{width:100%;height:100%;object-fit:cover;display:block}
@@ -411,6 +413,7 @@ hr.s{border:0;border-top:1px solid var(--line);margin:16px 0}
 <div class="lb" id="lb"><span class="x" id="lbX">×</span><img id="lbImg" src="" alt=""></div>
 <div class="clog" id="clog"><div class="clogbox"><div class="cloghd"><b id="clogTitle">Versionsverlauf</b><span class="x" id="clogX">×</span></div><div id="clogBody"></div></div></div>
 <div class="clog" id="attach"><div class="clogbox"><div class="cloghd"><b id="attachTitle">Anhängen</b><span class="x" id="attachX">×</span></div><div id="attachBody"></div></div></div>
+<div class="clog" id="permModal"><div class="clogbox"><div class="cloghd"><b id="permTitle">Rechte</b><span class="x" id="permX">×</span></div><div id="permBody"></div></div></div>
 <input type="file" id="imgIn" accept="image/*" multiple style="display:none">
 <input type="file" id="fileIn" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" multiple style="display:none">
 <input type="file" id="csvIn" accept=".csv,text/csv" style="display:none">
@@ -522,8 +525,10 @@ var I18N9={
 for(var _l9 in I18N9){for(var _k9 in I18N9[_l9])I18N[_l9][_k9]=I18N9[_l9][_k9];}
 I18N.de.whatsnew="Was ist neu?";I18N.en.whatsnew="What's new?";I18N.pl.whatsnew="Co nowego?";I18N.fr.whatsnew="Nouveautés ?";
 I18N.de.changelog="Versionsverlauf";I18N.en.changelog="Version history";I18N.pl.changelog="Historia wersji";I18N.fr.changelog="Historique des versions";
-var APPVER="v57";
+I18N.de.no_access="Kein Zugriff auf diesen Bereich.";I18N.en.no_access="No access to this area.";I18N.pl.no_access="Brak dostępu do tej sekcji.";I18N.fr.no_access="Pas d'accès à cette zone.";
+var APPVER="v58";
 var CHANGELOG=[
+ {v:"v58",d:"Rechte pro Benutzer: In den Einstellungen (Admin) festlegen, welche Bereiche jemand sehen darf (Störungen, Anleitungen, Maschinen-Tagebuch, Handbücher …), ob er Alzi nutzen und ob er bearbeiten darf. Braucht das alzi-admin-Update."},
  {v:"v57",d:"Benutzerverwaltung in den Einstellungen (Admin): Logins mit Passwort anlegen, Passwort ändern, löschen. Braucht die neue Edge Function alzi-admin."},
  {v:"v56",d:"Plan-Seitensuche viel treffsicherer: Umlaute & Wortstämme (Bänder→Band, Motornummer→Motor). Passt keine Seite, hängt Alzi kein falsches Blatt mehr an, sondern antwortet aus dem Text."},
  {v:"v55",d:"Fotos in Alzi laden: über 📎 jetzt „Foto(s) aus Galerie wählen\" (auch mehrere) ODER „Foto aufnehmen (Kamera)\" – Alzi liest das Bild."},
@@ -640,11 +645,24 @@ function isAdmin(){return !!(CUR&&CUR.email&&ADMINS.indexOf((CUR.email||"").toLo
 function authStore(j){
   var u=j.user||{};
   var name=(u.user_metadata&&(u.user_metadata.name||u.user_metadata.full_name))||nameFromEmail(u.email);
+  var perms=(u.app_metadata&&u.app_metadata.perms)||null;
   AUTH={access_token:j.access_token,refresh_token:j.refresh_token,
         expires_at:Date.now()+((j.expires_in||3600)*1000),
-        user:{id:u.id,email:u.email,name:name}};
+        user:{id:u.id,email:u.email,name:name,perms:perms}};
   lsSet(LS_AUTH,AUTH);CUR=curFromAuth();
 }
+/* ---- Rechte (was ein Benutzer sehen/tun darf). Admin = alles. Ohne Profil = alles (Altbestand). ---- */
+function applyPerms(){if($("kiBtn"))$("kiBtn").style.display=canKI()?"":"none";}
+function curPerm(){
+  if(isAdmin())return {areas:null,ki:true,edit:true,all:true};
+  var p=(AUTH&&AUTH.user&&AUTH.user.perms)||null;
+  if(!p)return {areas:null,ki:true,edit:true,all:true};
+  return {areas:Array.isArray(p.areas)?p.areas:null,ki:p.ki!==false,edit:p.edit!==false,all:false};
+}
+function canSee(typeId){var p=curPerm();return p.all||!p.areas||p.areas.indexOf(typeId)>=0;}
+function canKI(){return curPerm().ki;}
+function canEdit(){return curPerm().edit;}
+function visibleArts(){return artsArr().filter(function(a){return canSee(a.type);});}
 function authForceLogout(){AUTH=null;CUR=null;try{localStorage.removeItem(LS_AUTH);}catch(e){}}
 function authLogin(email,password){
   var url=authBase()+"/token?grant_type=password";
@@ -790,8 +808,8 @@ function reminders(){
 function renderHome(){
   var hm=$("home");if(!hm)return;
   var name=capit(((CUR&&CUR.n)||"").split(/\s+/)[0]||"");
-  var all=artsArr();var counts={};all.forEach(function(a){counts[a.type]=(counts[a.type]||0)+1;});
-  var cards=TYPES.map(function(tp){
+  var all=visibleArts();var counts={};all.forEach(function(a){counts[a.type]=(counts[a.type]||0)+1;});
+  var cards=TYPES.filter(function(tp){return canSee(tp.id);}).map(function(tp){
     return '<div class="stat'+(FILTER===tp.id?" active":"")+'" data-t="'+tp.id+'" style="background:'+tp.col+'14;color:'+tp.col+'">'+
       '<div class="num">'+(counts[tp.id]||0)+'</div><div class="lab">'+esc(typeLabel(tp))+'</div></div>';
   }).join("");
@@ -811,10 +829,10 @@ function renderHome(){
   for(var k=0;k<rr.length;k++)rr[k].onclick=function(){openDetail(this.getAttribute("data-id"));};
 }
 function renderTabs(){
-  var all=artsArr();
+  var all=visibleArts();
   var counts={};all.forEach(function(a){counts[a.type]=(counts[a.type]||0)+1;});
   var h='<div class="tab'+(FILTER===""?" active":"")+'" data-t=""><span>'+esc(t("all"))+'</span><span class="cnt">'+all.length+'</span></div>';
-  TYPES.forEach(function(tp){
+  TYPES.filter(function(tp){return canSee(tp.id);}).forEach(function(tp){
     h+='<div class="tab'+(FILTER===tp.id?" active":"")+'" data-t="'+tp.id+'"><span class="dot" style="background:'+tp.col+'"></span><span>'+esc(typeLabel(tp))+'</span><span class="cnt">'+(counts[tp.id]||0)+'</span></div>';
   });
   $("tabs").innerHTML=h;
@@ -841,7 +859,7 @@ function snippet(a){
 }
 function renderList(){
   renderHome();renderSub();
-  var arr=artsArr().filter(function(a){return (FILTER===""||a.type===FILTER)&&(FILTER!=="handbuch"||!DOKFILTER||a.dokart===DOKFILTER)&&matches(a,QTEXT);});
+  var arr=artsArr().filter(function(a){return canSee(a.type)&&(FILTER===""||a.type===FILTER)&&(FILTER!=="handbuch"||!DOKFILTER||a.dokart===DOKFILTER)&&matches(a,QTEXT);});
   arr.sort(function(a,b){return (b.updated||"").localeCompare(a.updated||"");});
   if(!arr.length){
     $("list").innerHTML='<div class="empty"><svg viewBox="0 0 24 24"><path d="M21 21l-4.3-4.3"/><circle cx="11" cy="11" r="8"/></svg>'+
@@ -875,7 +893,7 @@ function fmtDate(iso){if(!iso)return "";var d=new Date(iso);if(isNaN(d))return "
 function showView(name){
   ["viewList","viewDetail","viewEdit","viewSet","viewChat"].forEach(function(v){$(v).classList.add("hidden");});
   $(name).classList.remove("hidden");
-  $("fab").style.display=(name==="viewList")?"flex":"none";
+  $("fab").style.display=(name==="viewList"&&canEdit())?"flex":"none";
   window.scrollTo(0,0);
   document.body.classList.toggle("chatopen",name==="viewChat");
   window.scrollTo(0,0);
@@ -928,7 +946,7 @@ function aFields(a){
 }
 function assistRank(q){
   var terms=aTerms(q);if(!terms.length)return [];
-  var out=artsArr().map(function(a){
+  var out=visibleArts().map(function(a){
     var f=aFields(a),s=0;
     terms.forEach(function(w){if(aHit(f.hi,w))s+=5;if(aHit(f.md,w))s+=2;if(aHit(f.lo,w))s+=1;});
     if(s>0&&a.train)s+=6; // vom Experten geprüfte Antworten haben Vorrang
@@ -1226,6 +1244,7 @@ function kiAnswer(q,images){
    }).catch(function(){kiFail(t("ki_err"));});
 }
 function openChat(){
+  if(!canKI()){toast(t("no_access"));return;}
   $("viewChat").innerHTML='<button class="btn ghost" id="chatBack" style="margin-bottom:12px"><svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>'+esc(t("back"))+'</button>'+
     '<div class="detail chatpane">'+
     '<div class="chathd"><h2 style="margin:0">'+esc(t("a_title"))+'</h2><div class="chacts">'+(isAdmin()?'<button class="ivbtn'+(INTERVIEW&&INTERVIEW.active?" on":"")+'" id="ivBtn" title="'+esc(t("iv_start"))+'"><svg viewBox="0 0 24 24"><path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1 2.7 3 6 3s6-2 6-3v-5"/></svg><span>'+esc(INTERVIEW&&INTERVIEW.active?t("iv_run"):t("iv_start"))+'</span></button>':'')+'<button class="kitog'+(KIMODE?" on":"")+'" id="kiTog">'+esc(KIMODE?t("ki_on"):t("ki_off"))+'</button><button class="chatdel" id="chatClear" title="'+esc(t("a_clear"))+'"><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg></button></div></div>'+
@@ -1379,6 +1398,8 @@ if($("visIn"))$("visIn").onchange=onPickPhotos;
 if($("camIn"))$("camIn").onchange=onPickPhotos;
 if($("attachX"))$("attachX").onclick=function(){$("attach").classList.remove("show");};
 if($("attach"))$("attach").onclick=function(e){if(e.target===this)this.classList.remove("show");};
+if($("permX"))$("permX").onclick=function(){$("permModal").classList.remove("show");};
+if($("permModal"))$("permModal").onclick=function(e){if(e.target===this)this.classList.remove("show");};
 /* ===================== Spracheingabe (Diktat in der App) ===================== */
 function hasSpeech(){return !!(window.SpeechRecognition||window.webkitSpeechRecognition);}
 function speechLang(){return ({de:"de-DE",en:"en-US",pl:"pl-PL",fr:"fr-FR"})[LANG]||"de-DE";}
@@ -1480,15 +1501,15 @@ function openDetail(id){
     (docs?'<div class="docs">'+docs+'</div>':"")+
     ((a.tags&&a.tags.length)?'<div class="taglist" style="margin-top:14px">'+a.tags.map(function(x){return '<span class="tag">'+esc(x)+'</span>';}).join("")+'</div>':"")+
     '<hr class="s">'+
-    '<div class="row"><button class="btn ghost" id="editBtn"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>'+esc(t("edit"))+'</button>'+
+    '<div class="row">'+(canEdit()?'<button class="btn ghost" id="editBtn"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>'+esc(t("edit"))+'</button>':'')+
     '<button class="btn ghost" id="printBtn"><svg viewBox="0 0 24 24"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>'+esc(t("pdf"))+'</button>'+
-    '<button class="btn danger" id="delBtn"><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>'+esc(t("del"))+'</button></div>'+
+    (canEdit()?'<button class="btn danger" id="delBtn"><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>'+esc(t("del"))+'</button>':'')+'</div>'+
     '</div>';
   $("viewDetail").innerHTML=h;showView("viewDetail");
   $("backBtn").onclick=function(){showView("viewList");};
-  $("editBtn").onclick=function(){openEditor(id);};
+  if($("editBtn"))$("editBtn").onclick=function(){openEditor(id);};
   $("printBtn").onclick=function(){window.print();};
-  $("delBtn").onclick=function(){if(confirm(t("confirm_del"))){deleteArticle(id);toast(t("deleted"));showView("viewList");renderTabs();renderList();}};
+  if($("delBtn"))$("delBtn").onclick=function(){if(confirm(t("confirm_del"))){deleteArticle(id);toast(t("deleted"));showView("viewList");renderTabs();renderList();}};
   var shots=$("viewDetail").querySelectorAll(".shots img");
   for(var i=0;i<shots.length;i++)shots[i].onclick=function(){lightbox(this.getAttribute("data-u"));};
   var lns=$("viewDetail").querySelectorAll(".lnkrow");
@@ -1540,6 +1561,7 @@ function xlDate(v){v=(""+(v==null?"":v)).trim();if(/^\d{4,6}$/.test(v)){var d=ne
 /* ===================== Editor ===================== */
 var EDIT=null;        // aktuell bearbeiteter Artikel (Arbeitskopie)
 function openEditor(id,presetType){
+  if(!canEdit()){toast(t("no_access"));return;}
   if(id&&DB.arts[id]){EDIT=JSON.parse(JSON.stringify(DB.arts[id]));}
   else {EDIT={id:uid(),type:presetType||FILTER||"stoerung",title:"",body:"",sym:"",urs:"",los:"",cat:"",tags:[],images:[],files:[],
     modell:"",fahrgestellnr:"",baujahr:"",kunde:"",tuevBis:"",auslieferung:"",ausstattung:"",komponenten:[],reparaturen:[],termine:[],links:[],dokart:"",dbl:[]};}
@@ -2002,14 +2024,44 @@ function loadUsers(){
   adminCall("list").then(function(d){
     if(!box)return;
     if(!d||d.error){box.innerHTML='<div class="note" style="color:#dc2626">'+esc((d&&d.error)||"Fehler")+' – ist die Edge Function <b>alzi-admin</b> deployt?</div>';return;}
-    var us=d.users||[];
-    box.innerHTML=us.length?us.map(function(u){
-      return '<div class="setrow" style="align-items:center;gap:8px"><span class="l" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(u.email||"")+'</span>'+
-        '<button class="btn ghost" data-upw="'+esc(u.id)+'" style="padding:6px 10px;font-size:12px">Passwort</button>'+
-        '<button class="btn ghost" data-udel="'+esc(u.id)+'" data-um="'+esc(u.email||"")+'" style="padding:6px 10px;font-size:12px;color:#dc2626">×</button></div>';
+    USERS=d.users||[];
+    box.innerHTML=USERS.length?USERS.map(function(u){
+      var adm=ADMINS.indexOf((u.email||"").toLowerCase())>=0;
+      return '<div class="setrow" style="align-items:center;gap:6px"><span class="l" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(u.email||"")+(adm?' <b style="color:var(--red)">· Admin</b>':'')+'</span>'+
+        (adm?'':'<button class="btn ghost" data-uperm="'+esc(u.id)+'" style="padding:6px 9px;font-size:12px">Rechte</button>')+
+        '<button class="btn ghost" data-upw="'+esc(u.id)+'" style="padding:6px 9px;font-size:12px">Passwort</button>'+
+        (adm?'':'<button class="btn ghost" data-udel="'+esc(u.id)+'" data-um="'+esc(u.email||"")+'" style="padding:6px 9px;font-size:12px;color:#dc2626">×</button>')+'</div>';
     }).join(""):'<div class="note">Noch keine Benutzer.</div>';
     bindUsers();
   });
+}
+var USERS=[];
+function openPerms(id){
+  var u=null;for(var i=0;i<USERS.length;i++)if(USERS[i].id===id)u=USERS[i];
+  if(!u)return;
+  var p=u.perms||{};var areas=Array.isArray(p.areas)?p.areas:null;var ki=p.ki!==false,ed=p.edit!==false;
+  function ck(on){return 'style="width:20px;height:20px;flex:0 0 auto" '+(on?'checked':'');}
+  var rows=TYPES.map(function(tp){
+    var on=!areas||areas.indexOf(tp.id)>=0;
+    return '<label class="prow"><input type="checkbox" data-area="'+tp.id+'" '+ck(on)+'><span>'+esc(typeLabel(tp))+'</span></label>';
+  }).join("");
+  $("permTitle").textContent=u.email||"Rechte";
+  $("permBody").innerHTML='<div class="note" style="margin-bottom:8px">Häkchen = darf der Benutzer sehen.</div>'+rows+
+    '<hr class="s">'+
+    '<label class="prow"><input type="checkbox" id="pmKi" '+ck(ki)+'><span><b>Alzi (KI-Suche)</b></span></label>'+
+    '<label class="prow"><input type="checkbox" id="pmEdit" '+ck(ed)+'><span><b>Bearbeiten</b> (anlegen/ändern/löschen)</span></label>'+
+    '<div class="row" style="margin-top:12px"><button class="btn primary" id="pmSave">Speichern</button><button class="btn ghost" id="pmAll">Alles erlauben</button></div>';
+  $("permModal").classList.add("show");
+  $("pmAll").onclick=function(){$("permBody").querySelectorAll("input[type=checkbox]").forEach(function(c){c.checked=true;});};
+  $("pmSave").onclick=function(){
+    var ar=[];$("permBody").querySelectorAll("[data-area]").forEach(function(c){if(c.checked)ar.push(c.getAttribute("data-area"));});
+    var perms={areas:ar,ki:$("pmKi").checked,edit:$("pmEdit").checked};
+    toast("Speichere …");
+    adminCall("perms",{id:id,perms:perms}).then(function(d){
+      if(d&&d.ok){$("permModal").classList.remove("show");toast("Rechte gespeichert");loadUsers();}
+      else toast((d&&d.error)||"Fehler");
+    });
+  };
 }
 function bindUsers(){
   if($("nuAdd"))$("nuAdd").onclick=function(){
@@ -2022,6 +2074,7 @@ function bindUsers(){
     });
   };
   var box=$("userList");if(!box)return;
+  box.querySelectorAll("[data-uperm]").forEach(function(b){b.onclick=function(){openPerms(this.getAttribute("data-uperm"));};});
   box.querySelectorAll("[data-udel]").forEach(function(b){b.onclick=function(){var id=this.getAttribute("data-udel"),m=this.getAttribute("data-um");if(!confirm("Login wirklich löschen: "+m+"?"))return;adminCall("delete",{id:id}).then(function(d){if(d&&d.ok){toast("Login gelöscht");loadUsers();}else toast((d&&d.error)||"Fehler");});};});
   box.querySelectorAll("[data-upw]").forEach(function(b){b.onclick=function(){var id=this.getAttribute("data-upw");var pw=prompt("Neues Passwort (min. 6 Zeichen):");if(pw===null)return;if(pw.length<6){toast("min. 6 Zeichen");return;}adminCall("password",{id:id,password:pw}).then(function(d){if(d&&d.ok)toast("Passwort geändert");else toast((d&&d.error)||"Fehler");});};});
 }
@@ -2052,7 +2105,7 @@ function pendingDeepLink(){try{var m=(location.hash||"").match(/[#&]id=([^&]+)/)
 function deepLinkUrl(id){return location.origin+location.pathname+"#id="+encodeURIComponent(id);}
 function startApp(){
   $("gate").classList.add("hidden");$("app").classList.remove("hidden");
-  applyI18n();loadLocal();renderTabs();renderList();showView("viewList");
+  applyI18n();applyPerms();loadLocal();renderTabs();renderList();showView("viewList");
   setTimeout(blurField,80);setTimeout(blurField,350);
   var want=pendingDeepLink();
   if(want&&DB.arts[want])openDetail(want);

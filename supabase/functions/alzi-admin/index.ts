@@ -36,6 +36,7 @@ Deno.serve(async (req) => {
       if (error) return j({ error: error.message }, 500);
       const users = (data?.users || []).map((x: any) => ({
         id: x.id, email: x.email, created_at: x.created_at, last_sign_in_at: x.last_sign_in_at,
+        perms: (x.app_metadata && x.app_metadata.perms) || null,
       }));
       return j({ users });
     }
@@ -44,9 +45,22 @@ Deno.serve(async (req) => {
       const mail = String(body.email || "").trim().toLowerCase();
       const pw = String(body.password || "");
       if (!mail || pw.length < 6) return j({ error: "E-Mail und Passwort (min. 6 Zeichen) erforderlich." }, 400);
-      const { data, error } = await admin.auth.admin.createUser({ email: mail, password: pw, email_confirm: true });
+      const perms = body.perms && typeof body.perms === "object" ? body.perms : undefined;
+      const { data, error } = await admin.auth.admin.createUser({
+        email: mail, password: pw, email_confirm: true,
+        ...(perms ? { app_metadata: { perms } } : {}),
+      });
       if (error) return j({ error: error.message }, 400);
       return j({ ok: true, id: data?.user?.id });
+    }
+
+    if (action === "perms") {
+      const id = String(body.id || "");
+      if (!id) return j({ error: "ID fehlt." }, 400);
+      const perms = body.perms && typeof body.perms === "object" ? body.perms : {};
+      const { error } = await admin.auth.admin.updateUserById(id, { app_metadata: { perms } });
+      if (error) return j({ error: error.message }, 400);
+      return j({ ok: true });
     }
 
     if (action === "password") {
