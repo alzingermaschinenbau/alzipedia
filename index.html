@@ -522,8 +522,9 @@ var I18N9={
 for(var _l9 in I18N9){for(var _k9 in I18N9[_l9])I18N[_l9][_k9]=I18N9[_l9][_k9];}
 I18N.de.whatsnew="Was ist neu?";I18N.en.whatsnew="What's new?";I18N.pl.whatsnew="Co nowego?";I18N.fr.whatsnew="Nouveautés ?";
 I18N.de.changelog="Versionsverlauf";I18N.en.changelog="Version history";I18N.pl.changelog="Historia wersji";I18N.fr.changelog="Historique des versions";
-var APPVER="v56";
+var APPVER="v57";
 var CHANGELOG=[
+ {v:"v57",d:"Benutzerverwaltung in den Einstellungen (Admin): Logins mit Passwort anlegen, Passwort ändern, löschen. Braucht die neue Edge Function alzi-admin."},
  {v:"v56",d:"Plan-Seitensuche viel treffsicherer: Umlaute & Wortstämme (Bänder→Band, Motornummer→Motor). Passt keine Seite, hängt Alzi kein falsches Blatt mehr an, sondern antwortet aus dem Text."},
  {v:"v55",d:"Fotos in Alzi laden: über 📎 jetzt „Foto(s) aus Galerie wählen\" (auch mehrere) ODER „Foto aufnehmen (Kamera)\" – Alzi liest das Bild."},
  {v:"v54",d:"Auch dicke Handbücher: Alzi durchsucht jetzt bis 250 Seiten nach der passenden (Parameter-)Seite – z. B. die FU-Parametertabelle auf Seite 79 eines 144-Seiten-Handbuchs."},
@@ -1949,6 +1950,12 @@ function openSettings(){
     '<div class="code">'+esc(SETUP_SQL)+'</div>'+
     '<div style="font-size:13px;line-height:1.6">3. <b>Authentication → Users → Add user</b>: für jeden Techniker E-Mail + Passwort anlegen (Häkchen „Auto Confirm User").<br>4. Unter <b>Project Settings → API</b> die <b>Project URL</b> und den <b>Publishable key</b> (sb_publishable_…) kopieren und oben eintragen → <b>Verbinden</b>.</div>'+
     '</details>'+
+    '<h4 style="margin:18px 0 6px">Benutzer &amp; Logins</h4>'+
+    '<div class="note">Hier Zugänge für Techniker anlegen (E-Mail + Passwort). Sie melden sich dann mit diesen Daten an.</div>'+
+    '<div class="fg2"><div class="fg"><label>E-Mail</label><input class="field" id="nuMail" type="email" placeholder="name@firma.de" autocapitalize="off" autocomplete="off"></div>'+
+    '<div class="fg"><label>Passwort</label><input class="field" id="nuPw" type="text" placeholder="min. 6 Zeichen" autocomplete="off"></div></div>'+
+    '<button class="btn primary" id="nuAdd">Login anlegen</button>'+
+    '<div id="userList" style="margin-top:10px"><div class="note">Lädt …</div></div>'+
     '<h4 style="margin:18px 0 6px">'+esc(t("ablage_title"))+'</h4>'+
     '<div class="note">'+esc(t("ablage_hint"))+'</div>'+
     '<div class="row" style="margin-top:8px"><button class="btn primary" id="wissenUp"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>'+esc(t("ablage_up"))+'</button>'+
@@ -1981,6 +1988,42 @@ function openSettings(){
   $("logoutBtn").onclick=function(){authLogout().then(function(){location.reload();});};
   if($("verBtn"))$("verBtn").onclick=openChangelog;
   bindWissen();bindTraining();
+  if(isAdmin()&&$("userList")){bindUsers();loadUsers();}
+}
+/* ===================== Benutzerverwaltung (Admin, über Edge Function alzi-admin) ===================== */
+function adminCall(action,payload){
+  if(!sbReady())return Promise.resolve({error:"Keine Cloud-Verbindung."});
+  return ensureToken().then(function(){
+    return fetch(sbOrigin()+"/functions/v1/alzi-admin",{method:"POST",headers:{apikey:SB.key,Authorization:"Bearer "+sbBearer(),"Content-Type":"application/json"},body:JSON.stringify(Object.assign({action:action},payload||{}))});
+  }).then(function(r){return r.json().catch(function(){return {error:"Antwort unlesbar"};});}).catch(function(){return {error:"alzi-admin nicht erreichbar"};});
+}
+function loadUsers(){
+  var box=$("userList");if(!box)return;
+  adminCall("list").then(function(d){
+    if(!box)return;
+    if(!d||d.error){box.innerHTML='<div class="note" style="color:#dc2626">'+esc((d&&d.error)||"Fehler")+' – ist die Edge Function <b>alzi-admin</b> deployt?</div>';return;}
+    var us=d.users||[];
+    box.innerHTML=us.length?us.map(function(u){
+      return '<div class="setrow" style="align-items:center;gap:8px"><span class="l" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(u.email||"")+'</span>'+
+        '<button class="btn ghost" data-upw="'+esc(u.id)+'" style="padding:6px 10px;font-size:12px">Passwort</button>'+
+        '<button class="btn ghost" data-udel="'+esc(u.id)+'" data-um="'+esc(u.email||"")+'" style="padding:6px 10px;font-size:12px;color:#dc2626">×</button></div>';
+    }).join(""):'<div class="note">Noch keine Benutzer.</div>';
+    bindUsers();
+  });
+}
+function bindUsers(){
+  if($("nuAdd"))$("nuAdd").onclick=function(){
+    var mail=($("nuMail").value||"").trim(),pw=($("nuPw").value||"");
+    if(!mail||pw.length<6){toast("E-Mail + Passwort (min. 6 Zeichen)");return;}
+    toast("Lege Login an …");
+    adminCall("create",{email:mail,password:pw}).then(function(d){
+      if(d&&d.ok){$("nuMail").value="";$("nuPw").value="";toast("Login angelegt");loadUsers();}
+      else toast((d&&d.error)||"Fehler beim Anlegen");
+    });
+  };
+  var box=$("userList");if(!box)return;
+  box.querySelectorAll("[data-udel]").forEach(function(b){b.onclick=function(){var id=this.getAttribute("data-udel"),m=this.getAttribute("data-um");if(!confirm("Login wirklich löschen: "+m+"?"))return;adminCall("delete",{id:id}).then(function(d){if(d&&d.ok){toast("Login gelöscht");loadUsers();}else toast((d&&d.error)||"Fehler");});};});
+  box.querySelectorAll("[data-upw]").forEach(function(b){b.onclick=function(){var id=this.getAttribute("data-upw");var pw=prompt("Neues Passwort (min. 6 Zeichen):");if(pw===null)return;if(pw.length<6){toast("min. 6 Zeichen");return;}adminCall("password",{id:id,password:pw}).then(function(d){if(d&&d.ok)toast("Passwort geändert");else toast((d&&d.error)||"Fehler");});};});
 }
 function openChangelog(){
   if($("clogTitle"))$("clogTitle").textContent=t("changelog");
