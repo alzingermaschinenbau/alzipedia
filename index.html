@@ -414,6 +414,7 @@ hr.s{border:0;border-top:1px solid var(--line);margin:16px 0}
 <div class="clog" id="clog"><div class="clogbox"><div class="cloghd"><b id="clogTitle">Versionsverlauf</b><span class="x" id="clogX">×</span></div><div id="clogBody"></div></div></div>
 <div class="clog" id="attach"><div class="clogbox"><div class="cloghd"><b id="attachTitle">Anhängen</b><span class="x" id="attachX">×</span></div><div id="attachBody"></div></div></div>
 <div class="clog" id="permModal"><div class="clogbox"><div class="cloghd"><b id="permTitle">Rechte</b><span class="x" id="permX">×</span></div><div id="permBody"></div></div></div>
+<div class="clog" id="credModal"><div class="clogbox"><div class="cloghd"><b>Zugang zum Versenden</b><span class="x" id="credX">×</span></div><div id="credBody"></div></div></div>
 <input type="file" id="imgIn" accept="image/*" multiple style="display:none">
 <input type="file" id="fileIn" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" multiple style="display:none">
 <input type="file" id="csvIn" accept=".csv,text/csv" style="display:none">
@@ -526,8 +527,9 @@ for(var _l9 in I18N9){for(var _k9 in I18N9[_l9])I18N[_l9][_k9]=I18N9[_l9][_k9];}
 I18N.de.whatsnew="Was ist neu?";I18N.en.whatsnew="What's new?";I18N.pl.whatsnew="Co nowego?";I18N.fr.whatsnew="Nouveautés ?";
 I18N.de.changelog="Versionsverlauf";I18N.en.changelog="Version history";I18N.pl.changelog="Historia wersji";I18N.fr.changelog="Historique des versions";
 I18N.de.no_access="Kein Zugriff auf diesen Bereich.";I18N.en.no_access="No access to this area.";I18N.pl.no_access="Brak dostępu do tej sekcji.";I18N.fr.no_access="Pas d'accès à cette zone.";
-var APPVER="v58";
+var APPVER="v59";
 var CHANGELOG=[
+ {v:"v59",d:"Zugang versenden: nach dem Anlegen (oder Passwort-Reset) erscheint eine fertige Nachricht mit Link + E-Mail + Passwort zum Kopieren oder direkt Teilen. Plus „Nur Link kopieren\"."},
  {v:"v58",d:"Rechte pro Benutzer: In den Einstellungen (Admin) festlegen, welche Bereiche jemand sehen darf (Störungen, Anleitungen, Maschinen-Tagebuch, Handbücher …), ob er Alzi nutzen und ob er bearbeiten darf. Braucht das alzi-admin-Update."},
  {v:"v57",d:"Benutzerverwaltung in den Einstellungen (Admin): Logins mit Passwort anlegen, Passwort ändern, löschen. Braucht die neue Edge Function alzi-admin."},
  {v:"v56",d:"Plan-Seitensuche viel treffsicherer: Umlaute & Wortstämme (Bänder→Band, Motornummer→Motor). Passt keine Seite, hängt Alzi kein falsches Blatt mehr an, sondern antwortet aus dem Text."},
@@ -1400,6 +1402,8 @@ if($("attachX"))$("attachX").onclick=function(){$("attach").classList.remove("sh
 if($("attach"))$("attach").onclick=function(e){if(e.target===this)this.classList.remove("show");};
 if($("permX"))$("permX").onclick=function(){$("permModal").classList.remove("show");};
 if($("permModal"))$("permModal").onclick=function(e){if(e.target===this)this.classList.remove("show");};
+if($("credX"))$("credX").onclick=function(){$("credModal").classList.remove("show");};
+if($("credModal"))$("credModal").onclick=function(e){if(e.target===this)this.classList.remove("show");};
 /* ===================== Spracheingabe (Diktat in der App) ===================== */
 function hasSpeech(){return !!(window.SpeechRecognition||window.webkitSpeechRecognition);}
 function speechLang(){return ({de:"de-DE",en:"en-US",pl:"pl-PL",fr:"fr-FR"})[LANG]||"de-DE";}
@@ -1976,7 +1980,7 @@ function openSettings(){
     '<div class="note">Hier Zugänge für Techniker anlegen (E-Mail + Passwort). Sie melden sich dann mit diesen Daten an.</div>'+
     '<div class="fg2"><div class="fg"><label>E-Mail</label><input class="field" id="nuMail" type="email" placeholder="name@firma.de" autocapitalize="off" autocomplete="off"></div>'+
     '<div class="fg"><label>Passwort</label><input class="field" id="nuPw" type="text" placeholder="min. 6 Zeichen" autocomplete="off"></div></div>'+
-    '<button class="btn primary" id="nuAdd">Login anlegen</button>'+
+    '<div class="row"><button class="btn primary" id="nuAdd">Login anlegen</button><button class="btn ghost" id="copyLink">🔗 Nur Link kopieren</button></div>'+
     '<div id="userList" style="margin-top:10px"><div class="note">Lädt …</div></div>'+
     '<h4 style="margin:18px 0 6px">'+esc(t("ablage_title"))+'</h4>'+
     '<div class="note">'+esc(t("ablage_hint"))+'</div>'+
@@ -2069,14 +2073,34 @@ function bindUsers(){
     if(!mail||pw.length<6){toast("E-Mail + Passwort (min. 6 Zeichen)");return;}
     toast("Lege Login an …");
     adminCall("create",{email:mail,password:pw}).then(function(d){
-      if(d&&d.ok){$("nuMail").value="";$("nuPw").value="";toast("Login angelegt");loadUsers();}
+      if(d&&d.ok){$("nuMail").value="";$("nuPw").value="";loadUsers();openCred(mail,pw);}
       else toast((d&&d.error)||"Fehler beim Anlegen");
     });
   };
+  if($("copyLink"))$("copyLink").onclick=function(){copyText(appLink()).then(function(){toast("Link kopiert");}).catch(function(){toast("Konnte nicht kopieren");});};
   var box=$("userList");if(!box)return;
   box.querySelectorAll("[data-uperm]").forEach(function(b){b.onclick=function(){openPerms(this.getAttribute("data-uperm"));};});
   box.querySelectorAll("[data-udel]").forEach(function(b){b.onclick=function(){var id=this.getAttribute("data-udel"),m=this.getAttribute("data-um");if(!confirm("Login wirklich löschen: "+m+"?"))return;adminCall("delete",{id:id}).then(function(d){if(d&&d.ok){toast("Login gelöscht");loadUsers();}else toast((d&&d.error)||"Fehler");});};});
-  box.querySelectorAll("[data-upw]").forEach(function(b){b.onclick=function(){var id=this.getAttribute("data-upw");var pw=prompt("Neues Passwort (min. 6 Zeichen):");if(pw===null)return;if(pw.length<6){toast("min. 6 Zeichen");return;}adminCall("password",{id:id,password:pw}).then(function(d){if(d&&d.ok)toast("Passwort geändert");else toast((d&&d.error)||"Fehler");});};});
+  box.querySelectorAll("[data-upw]").forEach(function(b){b.onclick=function(){var id=this.getAttribute("data-upw");var em="";for(var i=0;i<USERS.length;i++)if(USERS[i].id===id)em=USERS[i].email||"";var pw=prompt("Neues Passwort (min. 6 Zeichen):");if(pw===null)return;if(pw.length<6){toast("min. 6 Zeichen");return;}adminCall("password",{id:id,password:pw}).then(function(d){if(d&&d.ok){toast("Passwort geändert");openCred(em,pw);}else toast((d&&d.error)||"Fehler");});};});
+}
+function appLink(){return location.origin+location.pathname;}
+function credText(email,pw){
+  return "Alzipedia – dein Zugang\n\nLink: "+appLink()+"\nE-Mail: "+email+"\nPasswort: "+pw+"\n\nAm Handy: Link in Safari/Chrome öffnen → Teilen → „Zum Home-Bildschirm\".";
+}
+function copyText(s){
+  if(navigator.clipboard&&navigator.clipboard.writeText)return navigator.clipboard.writeText(s);
+  return new Promise(function(res,rej){try{var ta=document.createElement("textarea");ta.value=s;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.focus();ta.select();document.execCommand("copy");document.body.removeChild(ta);res();}catch(e){rej(e);}});
+}
+function openCred(email,pw){
+  var txt=credText(email,pw);
+  $("credBody").innerHTML='<div class="note" style="margin-bottom:8px">Diese Nachricht an '+esc(email)+' senden:</div>'+
+    '<textarea class="field" id="credTxt" readonly style="min-height:150px">'+esc(txt)+'</textarea>'+
+    '<div class="row" style="margin-top:10px"><button class="btn primary" id="credCopy">Kopieren</button>'+
+    (navigator.share?'<button class="btn ghost" id="credShare">Teilen / Senden</button>':'')+'</div>'+
+    '<div class="note" style="margin-top:8px">Hinweis: Das Passwort ist nur jetzt sichtbar – kopiere es dir, bevor du schließt.</div>';
+  $("credModal").classList.add("show");
+  $("credCopy").onclick=function(){copyText(txt).then(function(){toast("Zugang kopiert");}).catch(function(){var ta=$("credTxt");if(ta){ta.focus();ta.select();}toast("Text markiert – mit Kopieren übernehmen");});};
+  if($("credShare"))$("credShare").onclick=function(){if(navigator.share)navigator.share({title:"Alzipedia Zugang",text:txt}).catch(function(){});};
 }
 function openChangelog(){
   if($("clogTitle"))$("clogTitle").textContent=t("changelog");
