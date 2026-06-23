@@ -527,8 +527,9 @@ for(var _l9 in I18N9){for(var _k9 in I18N9[_l9])I18N[_l9][_k9]=I18N9[_l9][_k9];}
 I18N.de.whatsnew="Was ist neu?";I18N.en.whatsnew="What's new?";I18N.pl.whatsnew="Co nowego?";I18N.fr.whatsnew="Nouveautés ?";
 I18N.de.changelog="Versionsverlauf";I18N.en.changelog="Version history";I18N.pl.changelog="Historia wersji";I18N.fr.changelog="Historique des versions";
 I18N.de.no_access="Kein Zugriff auf diesen Bereich.";I18N.en.no_access="No access to this area.";I18N.pl.no_access="Brak dostępu do tej sekcji.";I18N.fr.no_access="Pas d'accès à cette zone.";
-var APPVER="v59";
+var APPVER="v60";
 var CHANGELOG=[
+ {v:"v60",d:"Nutzungs-Auswertung in den Einstellungen (Admin): wer war wann/wie lange im System (Tag, Uhrzeit, Gesamtzeit, Sitzungen). Braucht die Tabelle usage_log + alzi-admin-Update."},
  {v:"v59",d:"Zugang versenden: nach dem Anlegen (oder Passwort-Reset) erscheint eine fertige Nachricht mit Link + E-Mail + Passwort zum Kopieren oder direkt Teilen. Plus „Nur Link kopieren\"."},
  {v:"v58",d:"Rechte pro Benutzer: In den Einstellungen (Admin) festlegen, welche Bereiche jemand sehen darf (Störungen, Anleitungen, Maschinen-Tagebuch, Handbücher …), ob er Alzi nutzen und ob er bearbeiten darf. Braucht das alzi-admin-Update."},
  {v:"v57",d:"Benutzerverwaltung in den Einstellungen (Admin): Logins mit Passwort anlegen, Passwort ändern, löschen. Braucht die neue Edge Function alzi-admin."},
@@ -1982,6 +1983,9 @@ function openSettings(){
     '<div class="fg"><label>Passwort</label><input class="field" id="nuPw" type="text" placeholder="min. 6 Zeichen" autocomplete="off"></div></div>'+
     '<div class="row"><button class="btn primary" id="nuAdd">Login anlegen</button><button class="btn ghost" id="copyLink">🔗 Nur Link kopieren</button></div>'+
     '<div id="userList" style="margin-top:10px"><div class="note">Lädt …</div></div>'+
+    '<h4 style="margin:18px 0 6px">Nutzung &amp; Auswertung</h4>'+
+    '<div class="note">Wer war wann und wie lange im System (letzte 30 Tage).</div>'+
+    '<div id="usageBox" style="margin-top:10px"><div class="note">Lädt …</div></div>'+
     '<h4 style="margin:18px 0 6px">'+esc(t("ablage_title"))+'</h4>'+
     '<div class="note">'+esc(t("ablage_hint"))+'</div>'+
     '<div class="row" style="margin-top:8px"><button class="btn primary" id="wissenUp"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>'+esc(t("ablage_up"))+'</button>'+
@@ -2014,7 +2018,7 @@ function openSettings(){
   $("logoutBtn").onclick=function(){authLogout().then(function(){location.reload();});};
   if($("verBtn"))$("verBtn").onclick=openChangelog;
   bindWissen();bindTraining();
-  if(isAdmin()&&$("userList")){bindUsers();loadUsers();}
+  if(isAdmin()&&$("userList")){bindUsers();loadUsers();loadUsage();}
 }
 /* ===================== Benutzerverwaltung (Admin, über Edge Function alzi-admin) ===================== */
 function adminCall(action,payload){
@@ -2102,6 +2106,54 @@ function openCred(email,pw){
   $("credCopy").onclick=function(){copyText(txt).then(function(){toast("Zugang kopiert");}).catch(function(){var ta=$("credTxt");if(ta){ta.focus();ta.select();}toast("Text markiert – mit Kopieren übernehmen");});};
   if($("credShare"))$("credShare").onclick=function(){if(navigator.share)navigator.share({title:"Alzipedia Zugang",text:txt}).catch(function(){});};
 }
+/* ===================== Nutzung mitschreiben (Anwesenheit) ===================== */
+var LS_USAGE_TS="alzipedia_usage_ts";
+function logUsage(force){
+  if(!sbReady()||!CUR||!CUR.email||!navigator.onLine)return;
+  var last=+(localStorage.getItem(LS_USAGE_TS)||0);
+  if(!force&&Date.now()-last<150000)return; // höchstens alle 2,5 min
+  localStorage.setItem(LS_USAGE_TS,String(Date.now()));
+  ensureToken().then(function(){
+    fetch(sbOrigin()+"/rest/v1/usage_log",{method:"POST",headers:{apikey:SB.key,Authorization:"Bearer "+sbBearer(),"Content-Type":"application/json","Prefer":"return=minimal"},body:JSON.stringify({email:String(CUR.email||"").toLowerCase()})}).catch(function(){});
+  }).catch(function(){});
+}
+function fmtDur(ms){var m=Math.round(ms/60000);if(m<1)return "<1 min";var h=Math.floor(m/60);m=m%60;return (h?h+" h ":"")+m+" min";}
+function fmtDT(ts){var d=new Date(ts);if(isNaN(d))return "";return d.toLocaleString("de-DE",{weekday:"short",day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});}
+function uTime(ms){var d=new Date(ms);return d.toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"});}
+function fmtDay(ms){var d=new Date(ms);return d.toLocaleDateString("de-DE",{weekday:"short",day:"2-digit",month:"2-digit",year:"2-digit"});}
+var USAGE=[];
+function loadUsage(){
+  var box=$("usageBox");if(!box)return;
+  adminCall("usage",{days:30}).then(function(d){
+    if(!box)return;
+    if(!d||d.error){box.innerHTML='<div class="note" style="color:#dc2626">'+esc((d&&d.error)||"Fehler")+' – ist die Tabelle <b>usage_log</b> angelegt und alzi-admin aktuell?</div>';return;}
+    var rows=d.rows||[];var byUser={};
+    rows.forEach(function(r){var e=(r.email||"?").toLowerCase();(byUser[e]=byUser[e]||[]).push(new Date(r.ts).getTime());});
+    var GAP=15*60000,HB=3*60000;
+    USAGE=Object.keys(byUser).map(function(e){
+      var ts=byUser[e].sort(function(a,b){return a-b;});
+      var sessions=[],start=ts[0],prev=ts[0];
+      for(var i=1;i<ts.length;i++){if(ts[i]-prev>GAP){sessions.push({start:start,end:prev});start=ts[i];}prev=ts[i];}
+      sessions.push({start:start,end:prev});
+      var total=0;sessions.forEach(function(s){total+=(s.end-s.start)+HB;});
+      return {email:e,total:total,sessions:sessions,last:ts[ts.length-1]};
+    }).sort(function(a,b){return b.last-a.last;});
+    box.innerHTML=USAGE.length?USAGE.map(function(u,idx){
+      return '<div class="setrow" style="align-items:center;gap:8px;flex-wrap:wrap"><span class="l" style="flex:1;min-width:150px"><b>'+esc(u.email)+'</b><br><span style="color:var(--muted);font-size:12px">Zuletzt: '+esc(fmtDT(u.last))+'</span></span>'+
+        '<span class="dst" style="background:#16a34a1a;color:#16a34a;border:1px solid #16a34a55">'+esc(fmtDur(u.total))+' · '+u.sessions.length+'×</span>'+
+        '<button class="btn ghost" data-uidx="'+idx+'" style="padding:6px 9px;font-size:12px">Details</button></div>'+
+        '<div class="usess" id="usess_'+idx+'" style="display:none;margin:0 0 6px 2px"></div>';
+    }).join(""):'<div class="note">Noch keine Nutzungsdaten (kommen, sobald jemand die App nutzt).</div>';
+    box.querySelectorAll("[data-uidx]").forEach(function(b){b.onclick=function(){toggleUsage(+this.getAttribute("data-uidx"));};});
+  });
+}
+function toggleUsage(idx){
+  var el=$("usess_"+idx),u=USAGE[idx];if(!el||!u)return;
+  if(el.style.display!=="none"){el.style.display="none";return;}
+  var ss=u.sessions.slice().sort(function(a,b){return b.start-a.start;}).slice(0,40);
+  el.innerHTML=ss.map(function(s){return '<div style="font-size:12px;color:var(--muted);padding:3px 0;border-bottom:1px solid var(--line)">'+esc(fmtDay(s.start))+' · '+esc(uTime(s.start))+'–'+esc(uTime(s.end))+' · <b style="color:var(--ink)">'+esc(fmtDur((s.end-s.start)+3*60000))+'</b></div>';}).join("");
+  el.style.display="block";
+}
 function openChangelog(){
   if($("clogTitle"))$("clogTitle").textContent=t("changelog");
   $("clogBody").innerHTML=CHANGELOG.map(function(c){return '<div class="clogrow"><span class="clogv">'+esc(c.v)+'</span><span class="clogd">'+esc(c.d)+'</span></div>';}).join("");
@@ -2134,11 +2186,13 @@ function startApp(){
   var want=pendingDeepLink();
   if(want&&DB.arts[want])openDetail(want);
   syncPull().then(function(){renderTabs();renderList();if(want&&DB.arts[want])openDetail(want);});
+  logUsage(true);
+  if(!window._usageTimer)window._usageTimer=setInterval(function(){if(!document.hidden)logUsage();},180000);
 }
 /* Verhindert, dass beim App-Start/Wiederöffnen die Tastatur (Suchleiste) automatisch aufgeht */
 function blurField(){try{var ae=document.activeElement;if(ae&&ae.id!=="chatIn"&&typeof ae.blur==="function")ae.blur();}catch(e){}}
 window.addEventListener("pageshow",function(){setTimeout(blurField,0);setTimeout(blurField,250);});
-document.addEventListener("visibilitychange",function(){if(!document.hidden){setTimeout(blurField,0);setTimeout(blurField,250);}});
+document.addEventListener("visibilitychange",function(){if(!document.hidden){setTimeout(blurField,0);setTimeout(blurField,250);logUsage();}});
 function showGate(){$("app").classList.add("hidden");$("gate").classList.remove("hidden");renderGate();}
 
 function renderGate(){

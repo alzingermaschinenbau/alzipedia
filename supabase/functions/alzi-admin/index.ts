@@ -90,6 +90,16 @@ Deno.serve(async (req) => {
       return j({ ok: true });
     }
 
+    if (action === "usage") {
+      const days = Math.min(Math.max(Number(body.days) || 30, 1), 365);
+      const since = new Date(Date.now() - days * 86400000).toISOString();
+      const { data, error } = await admin
+        .from("usage_log").select("email,ts").gte("ts", since)
+        .order("ts", { ascending: true }).limit(50000);
+      if (error) return j({ error: error.message }, 500);
+      return j({ rows: data || [] });
+    }
+
     return j({ error: "Unbekannte Aktion." }, 400);
   } catch (e) {
     return j({ error: String((e && (e as any).message) || e) }, 500);
