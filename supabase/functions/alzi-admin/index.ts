@@ -24,8 +24,18 @@ Deno.serve(async (req) => {
 
     // Aufrufer prüfen: muss eingeloggter Admin sein
     const token = (req.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "");
-    const { data: u } = await admin.auth.getUser(token);
-    const email = (u?.user?.email || "").toLowerCase();
+    // E-Mail des Aufrufers ermitteln: zuerst über getUser, sonst aus den (bereits geprüften) JWT-Claims.
+    let email = "";
+    try {
+      const { data } = await admin.auth.getUser(token);
+      email = (data?.user?.email || "").toLowerCase();
+    } catch (_) { /* ignore */ }
+    if (!email) {
+      try {
+        const payload = JSON.parse(atob((token.split(".")[1] || "").replace(/-/g, "+").replace(/_/g, "/")));
+        email = String(payload.email || "").toLowerCase();
+      } catch (_) { /* ignore */ }
+    }
     if (!email || ADMINS.indexOf(email) < 0) return j({ error: "Nur der Admin darf Benutzer verwalten." }, 403);
 
     const body = await req.json().catch(() => ({}));
